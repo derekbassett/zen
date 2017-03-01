@@ -415,12 +415,93 @@ func Test_scan(t *testing.T) {
 		v reflect.Value
 		s string
 	}
+
+	type tst struct {
+		Name   string
+		Age    int
+		Gender bool
+		Level  uint
+		Money  float32
+	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{
+			"case1",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(1),
+				"6",
+			},
+			false,
+		},
+
+		{
+			"case2",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(1),
+				"a",
+			},
+			true,
+		},
+
+		{
+			"case3",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(0),
+				"zen",
+			},
+			false,
+		},
+		{
+			"case4",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(2),
+				"true",
+			},
+			false,
+		},
+		{
+			"case5",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(2),
+				"null",
+			},
+			true,
+		},
+		{
+			"case6",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(3),
+				"4",
+			},
+			false,
+		},
+		{
+			"case7",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(3),
+				"-4",
+			},
+			true,
+		},
+		{
+			"case8",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(4),
+				"3.1415",
+			},
+			false,
+		},
+		{
+			"case9",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(4),
+				"-a3.1415",
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
