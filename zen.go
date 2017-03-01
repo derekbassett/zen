@@ -57,12 +57,19 @@ type (
 
 // New will create a Server instance and return a pointer which point to it
 func New() *Server {
+	s := &Server{
+		contextPool:            sync.Pool{},
+		RedirectTrailingSlash:  true,
+		RedirectFixedPath:      true,
+		HandleMethodNotAllowed: true,
+		HandleOPTIONS:          true,
+	}
 
-	s := &Server{contextPool: sync.Pool{}}
 	s.contextPool.New = func() interface{} {
 		c := Context{rw: &responseWriter{}}
 		return &c
 	}
+
 	return s
 }
 
