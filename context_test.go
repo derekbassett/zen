@@ -236,12 +236,43 @@ func TestContext_ParseValidateForm(t *testing.T) {
 	type args struct {
 		input interface{}
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
-	}{}
+	}{
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET?email=golang@gmail.com", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				false,
+			},
+			args{
+				&struct {
+					Email string `form:"email" valid:"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}" msg:"Illegal email"`
+				}{},
+			},
+			false,
+		},
+
+		{"case2",
+			fields{
+				mustNewRequest("GET", "/GET?name=zen", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				true,
+			},
+			args{
+				&struct {
+					Name string `form:"name" valid:"[a-zA-Z0-9]{6}" msg:"Name should have len 6"`
+				}{},
+			},
+			true,
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
@@ -252,39 +283,6 @@ func TestContext_ParseValidateForm(t *testing.T) {
 			}
 			if err := c.ParseValidateForm(tt.args.input); (err != nil) != tt.wantErr {
 				t.Errorf("Context.ParseValidateForm() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestContext_parseValidateForm(t *testing.T) {
-	type fields struct {
-		Req    *http.Request
-		rw     *responseWriter
-		params Params
-		parsed bool
-	}
-	type args struct {
-		input interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Context{
-				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
-				params: tt.fields.params,
-				parsed: tt.fields.parsed,
-			}
-			if err := c.parseValidateForm(tt.args.input); (err != nil) != tt.wantErr {
-				t.Errorf("Context.parseValidateForm() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -306,7 +304,35 @@ func TestContext_BindJSON(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader(`{"name":"zen"}`)),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				true,
+			},
+			args{
+				&struct {
+					Name string `json:"name"`
+				}{},
+			},
+			false,
+		},
+
+		{"case2",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				true,
+			},
+			args{
+				&struct {
+					Flag bool `json:"flag"`
+				}{},
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -339,7 +365,35 @@ func TestContext_BindXML(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader(`<x><name>hello</name></x>`)),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				true,
+			},
+			args{
+				&struct {
+					Name string `xml:"name"`
+				}{},
+			},
+			false,
+		},
+
+		{"case2",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				true,
+			},
+			args{
+				&struct {
+					Flag bool `xml:"flag"`
+				}{},
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

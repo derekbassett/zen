@@ -75,6 +75,9 @@ func (c *Context) Param(key string) string {
 
 // ParseValidateForm will parse request's form and map into a interface{} value
 func (c *Context) ParseValidateForm(input interface{}) error {
+	if !c.parsed {
+		c.parseInput()
+	}
 	return c.parseValidateForm(input)
 }
 
