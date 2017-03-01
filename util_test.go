@@ -1,7 +1,9 @@
 package zen
 
-import "testing"
-import "fmt"
+import (
+	"fmt"
+	"testing"
+)
 
 func Test_assert(t *testing.T) {
 	type args struct {
