@@ -2,6 +2,7 @@
 
 [![golang](https://img.shields.io/badge/Language-Go-green.svg?style=flat)](https://golang.org)
 [![Build Status](https://travis-ci.org/philchia/zen.svg?branch=master)](https://travis-ci.org/philchia/zen)
+[![CircleCI](https://circleci.com/gh/philchia/zen/tree/master.svg?style=svg)](https://circleci.com/gh/philchia/zen/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/philchia/zen/badge.svg?branch=master)](https://coveralls.io/github/philchia/zen?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/philchia/zen)](https://goreportcard.com/report/github.com/philchia/zen)
 [![codebeat badge](https://codebeat.co/badges/fdac6135-0381-45f4-8972-4234f485e6c5)](https://codebeat.co/projects/github-com-philchia-zen-master)
