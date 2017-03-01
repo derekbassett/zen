@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -591,6 +592,47 @@ func TestServer_PProf(t *testing.T) {
 			if handlers == nil || len(handlers) == 0 {
 				t.Error("PProf handlers get nil")
 			}
+		})
+	}
+}
+
+func TestServer_Static(t *testing.T) {
+	type fields struct {
+		trees                  []*methodTree
+		RedirectTrailingSlash  bool
+		RedirectFixedPath      bool
+		HandleMethodNotAllowed bool
+		HandleOPTIONS          bool
+		notFoundHandler        HandlerFunc
+		panicHandler           PanicHandler
+		methodNotAllowed       HandlerFunc
+		contextPool            sync.Pool
+	}
+	type args struct {
+		pattern string
+		dir     string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Server{
+				trees: tt.fields.trees,
+				RedirectTrailingSlash:  tt.fields.RedirectTrailingSlash,
+				RedirectFixedPath:      tt.fields.RedirectFixedPath,
+				HandleMethodNotAllowed: tt.fields.HandleMethodNotAllowed,
+				HandleOPTIONS:          tt.fields.HandleOPTIONS,
+				notFoundHandler:        tt.fields.notFoundHandler,
+				panicHandler:           tt.fields.panicHandler,
+				methodNotAllowed:       tt.fields.methodNotAllowed,
+				contextPool:            tt.fields.contextPool,
+			}
+			s.Static(tt.args.pattern, tt.args.dir)
 		})
 	}
 }
