@@ -133,6 +133,11 @@ func (s *Server) HandleNotFound(handler HandlerFunc) {
 	s.notFoundHandler = handler
 }
 
+// HandleNotAllowed set server's methodNotAllowed
+func (s *Server) HandleNotAllowed(handler HandlerFunc) {
+	s.methodNotAllowed = handler
+}
+
 // HandlePanic set server's panicHandler
 func (s *Server) HandlePanic(handler PanicHandler) {
 	s.panicHandler = handler

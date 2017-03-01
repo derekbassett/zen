@@ -54,7 +54,9 @@ type (
 		HandleOPTIONS   bool
 		notFoundHandler HandlerFunc
 		panicHandler    PanicHandler
-		contextPool     sync.Pool
+
+		methodNotAllowed HandlerFunc
+		contextPool      sync.Pool
 	}
 )
 
@@ -74,6 +76,59 @@ func New() *Server {
 	}
 
 	return s
+}
+
+// Lookup allows the manual lookup of a method + path combo.
+// This is e.g. useful to build a framework around this router.
+// If the path was found, it returns the handle function and the path parameter
+// values. Otherwise the third return value indicates whether a redirection to
+// the same path with an extra / without the trailing slash should be performed.
+func (s *Server) Lookup(method, path string) (Handlers, Params, bool) {
+	for i := range s.trees {
+		if s.trees[i].method == method {
+			return s.trees[i].node.getValue(path)
+		}
+	}
+	return nil, nil, false
+}
+
+func (s *Server) allowed(path, reqMethod string) (allow string) {
+	if path == "*" { // server-wide
+
+		for i := range s.trees {
+			if s.trees[i].method == "OPTIONS" {
+				continue
+			}
+
+			// add request method to list of allowed methods
+			if len(allow) == 0 {
+				allow = s.trees[i].method
+			} else {
+				allow += ", " + s.trees[i].method
+			}
+		}
+	} else { // specific path
+		for i := range s.trees {
+			// Skip the requested method - we already tried this one
+			if s.trees[i].method == reqMethod || s.trees[i].method == "OPTIONS" {
+				continue
+			}
+
+			handles, _, _ := s.trees[i].node.getValue(path)
+			if handles != nil {
+				// add request method to list of allowed methods
+				if len(allow) == 0 {
+					allow = s.trees[i].method
+				} else {
+					allow += ", " + s.trees[i].method
+				}
+			}
+		}
+	}
+	if len(allow) > 0 {
+		allow += ", OPTIONS"
+	}
+	return
 }
 
 // Required by http.Handler interface. This method is invoked by the
@@ -98,16 +153,74 @@ func (s *Server) handleHTTPRequest(c *Context) {
 	for i := 0; i < len(s.trees); i++ {
 		t := s.trees[i]
 		if t.method == httpMethod {
-			handlers, params, _ := t.node.getValue(path)
-			c.params = params
+			if handlers, params, tsr := t.node.getValue(path); handlers != nil {
+				c.params = params
 
-			for _, h := range handlers {
-				h(c)
-				if c.rw.written {
+				for _, h := range handlers {
+					h(c)
+					if c.rw.written {
+						return
+					}
+				}
+				return
+			} else if c.Req.Method != "CONNECT" && path != "/" {
+				code := 301 // Permanent redirect, request with GET method
+				if c.Req.Method != "GET" {
+					// Temporary redirect, request with same method
+					// As of Go 1.3, Go does not support status code 308.
+					code = 307
+				}
+
+				if tsr && s.RedirectTrailingSlash {
+					if len(path) > 1 && path[len(path)-1] == '/' {
+						c.Req.URL.Path = path[:len(path)-1]
+					} else {
+						c.Req.URL.Path = path + "/"
+					}
+					http.Redirect(c.rw, c.Req, c.Req.URL.String(), code)
 					return
+				}
+
+				// Try to fix the request path
+				if s.RedirectFixedPath {
+					fixedPath, found := t.node.findCaseInsensitivePath(
+						CleanPath(path),
+						s.RedirectTrailingSlash,
+					)
+					if found {
+						c.Req.URL.Path = string(fixedPath)
+						http.Redirect(c.rw, c.Req, c.Req.URL.String(), code)
+						return
+					}
 				}
 			}
 
+		}
+	}
+
+	if c.Req.Method == "OPTIONS" {
+		// Handle OPTIONS requests
+		if s.HandleOPTIONS {
+			if allow := s.allowed(path, c.Req.Method); len(allow) > 0 {
+				c.WriteHeader("Allow", allow)
+				return
+			}
+		}
+	} else {
+		// Handle 405
+		if s.HandleMethodNotAllowed {
+			if allow := s.allowed(path, c.Req.Method); len(allow) > 0 {
+				c.WriteHeader("Allow", allow)
+				if s.methodNotAllowed != nil {
+					s.methodNotAllowed(c)
+				} else {
+					http.Error(c.rw,
+						http.StatusText(http.StatusMethodNotAllowed),
+						http.StatusMethodNotAllowed,
+					)
+				}
+				return
+			}
 		}
 	}
 
