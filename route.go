@@ -59,7 +59,7 @@ func (s *Server) Get(path string, handler HandlerFunc) {
 
 // Post adds a new Route for POST requests.
 func (s *Server) Post(path string, handler HandlerFunc) {
-	s.Route(GET, path, handler)
+	s.Route(POST, path, handler)
 }
 
 // Put adds a new Route for PUT requests.
