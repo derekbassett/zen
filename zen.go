@@ -10,6 +10,9 @@ const (
 	Version = "v1.0.0Beta"
 )
 
+// ensure Server implement http.Handler
+var _ http.Handler = new(Server)
+
 type (
 	methodTree struct {
 		method string
