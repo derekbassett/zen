@@ -1,6 +1,7 @@
 package zen
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,21 +9,26 @@ import (
 	"testing"
 )
 
-type mockResponseWriter struct{}
+type mockResponseWriter struct {
+	code int
+	body bytes.Buffer
+}
 
 func (m *mockResponseWriter) Header() (h http.Header) {
 	return http.Header{}
 }
 
 func (m *mockResponseWriter) Write(p []byte) (n int, err error) {
-	return len(p), nil
+	return m.body.Write(p)
 }
 
 func (m *mockResponseWriter) WriteString(s string) (n int, err error) {
-	return len(s), nil
+	return m.body.WriteString(s)
 }
 
-func (m *mockResponseWriter) WriteHeader(int) {}
+func (m *mockResponseWriter) WriteHeader(code int) {
+	m.code = code
+}
 
 func TestParams(t *testing.T) {
 	ps := Params{
@@ -63,7 +69,7 @@ func TestRouter(t *testing.T) {
 }
 
 func TestRouterAPI(t *testing.T) {
-	var get, head, options, post, put, patch, delete, handlerFunc bool
+	var get, head, options, post, put, patch, delete, connect, trace, handlerFunc bool
 
 	router := New()
 	router.Get("/GET", func(c *Context) {
@@ -86,6 +92,12 @@ func TestRouterAPI(t *testing.T) {
 	})
 	router.Del("/DELETE", func(c *Context) {
 		delete = true
+	})
+	router.Connect("/CONNECT", func(c *Context) {
+		connect = true
+	})
+	router.Trace("/TRACE", func(c *Context) {
+		trace = true
 	})
 	router.Route("GET", "/HandlerFunc", func(c *Context) {
 		handlerFunc = true
@@ -135,10 +147,106 @@ func TestRouterAPI(t *testing.T) {
 		t.Error("routing DELETE failed")
 	}
 
+	r, _ = http.NewRequest("CONNECT", "/CONNECT", nil)
+	router.ServeHTTP(w, r)
+	if !connect {
+		t.Error("routing CONNECT failed")
+	}
+
+	r, _ = http.NewRequest("TRACE", "/TRACE", nil)
+	router.ServeHTTP(w, r)
+	if !trace {
+		t.Error("routing TRACE failed")
+	}
+
 	r, _ = http.NewRequest("GET", "/HandlerFunc", nil)
 	router.ServeHTTP(w, r)
 	if !handlerFunc {
 		t.Error("routing HandlerFunc failed")
+	}
+}
+
+func TestRouterAPIAny(t *testing.T) {
+	var get, head, options, post, put, patch, delete, connect, trace bool
+
+	router := New()
+	router.Any("/ANY", func(c *Context) {
+		switch c.Req.Method {
+		case GET:
+			get = true
+		case HEAD:
+			head = true
+		case OPTIONS:
+			options = true
+		case POST:
+			post = true
+		case PUT:
+			put = true
+		case PATCH:
+			patch = true
+		case DELETE:
+			delete = true
+		case CONNECT:
+			connect = true
+		case TRACE:
+			trace = true
+		}
+	})
+
+	w := new(mockResponseWriter)
+
+	r, _ := http.NewRequest("GET", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !get {
+		t.Error("routing GET failed")
+	}
+
+	r, _ = http.NewRequest("HEAD", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !head {
+		t.Error("routing HEAD failed")
+	}
+
+	r, _ = http.NewRequest("OPTIONS", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !options {
+		t.Error("routing OPTIONS failed")
+	}
+
+	r, _ = http.NewRequest("POST", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !post {
+		t.Error("routing POST failed")
+	}
+
+	r, _ = http.NewRequest("PUT", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !put {
+		t.Error("routing PUT failed")
+	}
+
+	r, _ = http.NewRequest("PATCH", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !patch {
+		t.Error("routing PATCH failed")
+	}
+
+	r, _ = http.NewRequest("DELETE", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !delete {
+		t.Error("routing DELETE failed")
+	}
+
+	r, _ = http.NewRequest("CONNECT", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !connect {
+		t.Error("routing CONNECT failed")
+	}
+
+	r, _ = http.NewRequest("TRACE", "/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !trace {
+		t.Error("routing TRACE failed")
 	}
 }
 
@@ -275,10 +383,10 @@ func TestRouterNotAllowed(t *testing.T) {
 	// test custom handler
 	w = httptest.NewRecorder()
 	responseText := "custom method"
-	router.methodNotAllowed = wrapF(func(w http.ResponseWriter, req *http.Request) {
+	router.HandleNotAllowed(wrapF(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte(responseText))
-	})
+	}))
 	router.ServeHTTP(w, r)
 	if got := w.Body.String(); !(got == responseText) {
 		t.Errorf("unexpected response got %q want %q", got, responseText)
@@ -325,10 +433,10 @@ func TestRouterNotFound(t *testing.T) {
 
 	// Test custom not found handler
 	var notFound bool
-	router.notFoundHandler = wrapF(func(rw http.ResponseWriter, r *http.Request) {
+	router.HandleNotFound(wrapF(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(404)
 		notFound = true
-	})
+	}))
 	r, _ := http.NewRequest("GET", "/nope", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
@@ -360,9 +468,9 @@ func TestRouterPanicHandler(t *testing.T) {
 	router := New()
 	panicHandled := false
 
-	router.panicHandler = func(c *Context, _ interface{}) {
+	router.HandlePanic(func(c *Context, _ interface{}) {
 		panicHandled = true
-	}
+	})
 
 	router.Route("PUT", "/user/:name", func(c *Context) {
 		panic("oops!")
@@ -371,15 +479,26 @@ func TestRouterPanicHandler(t *testing.T) {
 	w := new(mockResponseWriter)
 	req, _ := http.NewRequest("PUT", "/user/gopher", nil)
 
-	defer func() {
-		if rcv := recover(); rcv != nil {
-			t.Fatal("handling panic failed")
-		}
-	}()
-
 	router.ServeHTTP(w, req)
 
 	if !panicHandled {
+		t.Fatal("simulating failed")
+	}
+}
+
+func TestRouterDefaultPanicHandler(t *testing.T) {
+	router := New()
+
+	router.Route("PUT", "/user/:name", func(c *Context) {
+		panic("oops!")
+	})
+
+	w := new(mockResponseWriter)
+	req, _ := http.NewRequest("PUT", "/user/gopher", nil)
+
+	router.ServeHTTP(w, req)
+
+	if w.code != http.StatusInternalServerError {
 		t.Fatal("simulating failed")
 	}
 }
