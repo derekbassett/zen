@@ -272,6 +272,21 @@ func TestContext_ParseValidateForm(t *testing.T) {
 			},
 			true,
 		},
+
+		{"case3",
+			fields{
+				mustNewRequest("GET", "/GET?name=zen", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				true,
+			},
+			args{
+				&struct {
+					Name int `form:"name" valid:"[a-zA-Z0-9]{6}" msg:"Name should have len 6"`
+				}{},
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -417,11 +432,12 @@ func Test_scan(t *testing.T) {
 	}
 
 	type tst struct {
-		Name   string
-		Age    int
-		Gender bool
-		Level  uint
-		Money  float32
+		Name     string
+		Age      int
+		Gender   bool
+		Level    uint
+		Money    float32
+		password string
 	}
 	tests := []struct {
 		name    string
@@ -502,6 +518,14 @@ func Test_scan(t *testing.T) {
 			},
 			true,
 		},
+		{
+			"case9",
+			args{
+				reflect.ValueOf(new(tst)).Elem().Field(5),
+				"-a3.1415",
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -523,7 +547,42 @@ func Test_valid(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{
+			"case1",
+			args{
+				"golang@gmail.com",
+				"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}",
+				"illegal email address",
+			},
+			false,
+		},
+		{
+			"case2",
+			args{
+				"golang@@gmail.com",
+				"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}",
+				"illegal email address",
+			},
+			true,
+		},
+		{
+			"case3",
+			args{
+				"golang@@gmail.com",
+				"",
+				"illegal email address",
+			},
+			false,
+		},
+		{
+			"case4",
+			args{
+				"golang@@gmail.com",
+				"[0--0]",
+				"illegal email address",
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -693,7 +752,6 @@ func TestContext_WriteStatus(t *testing.T) {
 func TestContext_RawStr(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
 		params Params
 		parsed bool
 	}
@@ -705,17 +763,31 @@ func TestContext_RawStr(t *testing.T) {
 		fields fields
 		args   args
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				nil,
+				false,
+			},
+			args{
+				"hello, world",
+			},
+		},
 	}
 	for _, tt := range tests {
+		rw := new(mockResponseWriter)
+
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				rw:     &responseWriter{writer: rw, written: false},
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
 			c.RawStr(tt.args.s)
+			if rw.body.String() != tt.args.s {
+				t.Errorf("Context.RawStr() get = %s, want %s", rw.body.String(), tt.args.s)
+			}
 		})
 	}
 }
@@ -723,7 +795,6 @@ func TestContext_RawStr(t *testing.T) {
 func TestContext_Data(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
 		params Params
 		parsed bool
 	}
@@ -736,17 +807,32 @@ func TestContext_Data(t *testing.T) {
 		fields fields
 		args   args
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				nil,
+				false,
+			},
+			args{
+				"application/json",
+				[]byte("hello,world"),
+			},
+		},
 	}
 	for _, tt := range tests {
+		rw := new(mockResponseWriter)
+
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				rw:     &responseWriter{writer: rw, written: false},
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
 			c.Data(tt.args.cType, tt.args.data)
+			if rw.body.String() != string(tt.args.data) {
+				t.Errorf("Context.Data() get = %s, want %s", rw.body.String(), string(tt.args.data))
+			}
 		})
 	}
 }
