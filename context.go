@@ -56,6 +56,7 @@ func (s *Server) putBackContext(c *Context) {
 
 // parseInput will parse request's form and
 func (c *Context) parseInput() error {
+	c.parsed = true
 	return c.Req.ParseForm()
 }
 
