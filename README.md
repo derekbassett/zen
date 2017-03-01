@@ -126,7 +126,7 @@ func handler(c *zen.Context) {
 ## Todo
 
 - [ ] More elegant filter implement
-- [ ] Graceful restart based on go 1.8
+- [ ] Context support
 - [ ] Handle redirect
 - [ ] Increase test coverage
 - [ ] Documents
