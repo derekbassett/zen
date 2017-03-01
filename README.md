@@ -1,10 +1,11 @@
 # zen is a lightweight go framework for web development
 
-[![golang](https://img.shields.io/badge/Language-Go-green.svg?style=flat)](https://golang.org)
+
 [![CircleCI](https://circleci.com/gh/philchia/zen/tree/master.svg?style=svg)](https://circleci.com/gh/philchia/zen/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/philchia/zen/badge.svg?branch=master)](https://coveralls.io/github/philchia/zen?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/philchia/zen)](https://goreportcard.com/report/github.com/philchia/zen)
 [![codebeat badge](https://codebeat.co/badges/fdac6135-0381-45f4-8972-4234f485e6c5)](https://codebeat.co/projects/github-com-philchia-zen-master)
+[![golang](https://img.shields.io/badge/Language-Go-green.svg?style=flat)](https://golang.org)
 [![GoDoc](https://godoc.org/github.com/philchia/zen?status.svg)](https://godoc.org/github.com/philchia/zen)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/MIT)
 
