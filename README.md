@@ -38,7 +38,7 @@ func main() {
     server.Post("/test", handler)
     server.Put("/test",handler)
     server.Patch("/test", handler)
-    server.Del("/test",handler)
+    server.Delete("/test",handler)
     if err := server.Run(":8080"); err != nil {
     log.Println(err)
     }

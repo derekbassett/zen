@@ -3,10 +3,12 @@ package zen
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"reflect"
-	"sync"
 	"testing"
 )
 
@@ -91,7 +93,7 @@ func TestRouterAPI(t *testing.T) {
 	router.Patch("/PATCH", func(c *Context) {
 		patch = true
 	})
-	router.Del("/DELETE", func(c *Context) {
+	router.Delete("/DELETE", func(c *Context) {
 		delete = true
 	})
 	router.Connect("/CONNECT", func(c *Context) {
@@ -368,7 +370,7 @@ func TestRouterNotAllowed(t *testing.T) {
 	}
 
 	// add another method
-	router.Del("/path", handlerFunc)
+	router.Delete("/path", handlerFunc)
 	router.Options("/path", handlerFunc) // must be ignored
 
 	// test again
@@ -597,42 +599,27 @@ func TestServer_PProf(t *testing.T) {
 }
 
 func TestServer_Static(t *testing.T) {
-	type fields struct {
-		trees                  []*methodTree
-		RedirectTrailingSlash  bool
-		RedirectFixedPath      bool
-		HandleMethodNotAllowed bool
-		HandleOPTIONS          bool
-		notFoundHandler        HandlerFunc
-		panicHandler           PanicHandler
-		methodNotAllowed       HandlerFunc
-		contextPool            sync.Pool
+	testRoot, _ := os.Getwd()
+	f, err := ioutil.TempFile(testRoot, "")
+	if err != nil {
+		t.Error(err)
 	}
-	type args struct {
-		pattern string
-		dir     string
+	defer os.Remove(f.Name())
+	f.WriteString("zen")
+	f.Close()
+
+	dir, filename := filepath.Split(f.Name())
+	fmt.Println(dir, filename)
+	server := New()
+	server.Static("/static", dir)
+
+	req := mustNewRequest("GET", "/static/"+filename, nil)
+	rw := new(mockResponseWriter)
+	server.ServeHTTP(rw, req)
+	if rw.code != 200 {
+		t.Error("Get static file code != 200")
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				trees: tt.fields.trees,
-				RedirectTrailingSlash:  tt.fields.RedirectTrailingSlash,
-				RedirectFixedPath:      tt.fields.RedirectFixedPath,
-				HandleMethodNotAllowed: tt.fields.HandleMethodNotAllowed,
-				HandleOPTIONS:          tt.fields.HandleOPTIONS,
-				notFoundHandler:        tt.fields.notFoundHandler,
-				panicHandler:           tt.fields.panicHandler,
-				methodNotAllowed:       tt.fields.methodNotAllowed,
-				contextPool:            tt.fields.contextPool,
-			}
-			s.Static(tt.args.pattern, tt.args.dir)
-		})
+	if rw.body.String() != "zen" {
+		t.Errorf("Get static file body want %s got %s", "zen", rw.body.String())
 	}
 }

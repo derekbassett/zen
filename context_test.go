@@ -2,7 +2,9 @@ package zen
 
 import (
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -834,5 +836,32 @@ func TestContext_Data(t *testing.T) {
 				t.Errorf("Context.Data() get = %s, want %s", rw.body.String(), string(tt.args.data))
 			}
 		})
+	}
+}
+
+func TestContext_File(t *testing.T) {
+	testRoot, _ := os.Getwd()
+	f, err := ioutil.TempFile(testRoot, "")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.Remove(f.Name())
+	f.WriteString("zen")
+	f.Close()
+
+	server := New()
+	server.Get("/file", func(c *Context) {
+		c.File(f.Name())
+	})
+	req := mustNewRequest("GET", "/file", nil)
+	rw := new(mockResponseWriter)
+
+	server.ServeHTTP(rw, req)
+
+	if rw.code != 200 {
+		t.Errorf("Context.File get code %d want %d", rw.code, 200)
+	}
+	if rw.body.String() != "zen" {
+		t.Errorf("Context.File get body %s want %s", rw.body.String(), "zen")
 	}
 }
