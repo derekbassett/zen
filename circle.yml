@@ -1,0 +1,23 @@
+machine:
+  environment:
+    # GOROOT is not set by default
+    GOROOT: ""
+    PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
+    GOPATH: "${HOME}/.go_workspace:/usr/local/go_workspace:${HOME}/.go_project"
+
+dependencies:
+  override:
+	- mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}
+	- ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    # './...' is a relative pattern which means all subdirectories
+    - go get -t -d -v ./...
+	- go get -u github.com/mattn/goveralls
+    - go build -v
+
+test:
+  override:
+    # './...' is a relative pattern which means all subdirectories
+    - go test -v -race ./...
+	- GOMAXPROCS=1 go test -timeout 30s ./...
+  	- GOMAXPROCS=4 go test -timeout 30s -race ./...
+  	- $GOPATH/bin/goveralls -service=circle-ci -repotoken $COVERALLS_TOKEN
