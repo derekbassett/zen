@@ -7,6 +7,8 @@ import (
 type (
 	// HandlerFunc is a type alias for handler
 	HandlerFunc func(*Context)
+	// Handlers is slice of HandlerFunc
+	Handlers []HandlerFunc
 	// PanicHandler handle panic
 	PanicHandler func(*Context, interface{})
 )

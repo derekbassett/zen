@@ -28,16 +28,16 @@ const (
 )
 
 func (s *Server) methodRouteTree(method string) *node {
-	for _, t := range s.routeTree {
+	for _, t := range s.trees {
 		if t.method == method {
 			return t.node
 		}
 	}
-	methodRoot := &methodNode{
+	methodRoot := &methodTree{
 		method: method,
 		node:   new(node),
 	}
-	s.routeTree = append(s.routeTree, methodRoot)
+	s.trees = append(s.trees, methodRoot)
 
 	return methodRoot.node
 }

@@ -75,12 +75,7 @@ func (c *Context) Form(key string) string {
 
 // Param return url param with given key
 func (c *Context) Param(key string) string {
-	for _, p := range c.params {
-		if p.key == key {
-			return p.value
-		}
-	}
-	return ""
+	return c.params.ByName(key)
 }
 
 // ParseValidateForm will parse request's form and map into a interface{} value

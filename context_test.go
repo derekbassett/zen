@@ -46,7 +46,6 @@ func TestServer_getContext(t *testing.T) {
 			s := &Server{
 				notFoundHandler: tt.fields.notFoundHandler,
 				panicHandler:    tt.fields.panicHandler,
-				filters:         tt.fields.filters,
 				contextPool:     *tt.fields.contextPool,
 			}
 			if got := s.getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
