@@ -77,16 +77,6 @@ func handler(c *zen.Context) {
 }
 ```
 
-### Use middleware
-
-```go
-    server := zen.New()
-    server.Filter(filter)
-    if err := server.Run(":8080"); err != nil {
-    log.Println(err)
-    }
-```
-
 ### Use pprof
 
 ```go
