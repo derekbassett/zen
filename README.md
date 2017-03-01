@@ -51,7 +51,7 @@ func main() {
 ```go
 	server := zen.New()
 	server.Get("/user/:uid",func (c *Context) {
-		c.JSON(map[string]string{"uid": c.Param(":uid")})
+		c.JSON(map[string]string{"uid": c.Param("uid")})
 	})
 	if err := server.Run(":8080"); err != nil {
 	log.Println(err)
