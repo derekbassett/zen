@@ -537,31 +537,49 @@ func Test_valid(t *testing.T) {
 func TestContext_JSON(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
 		params Params
 		parsed bool
 	}
 	type args struct {
 		i interface{}
 	}
+
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name     string
+		fields   fields
+		args     args
+		wantErr  bool
+		wantBody string
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				nil,
+				false,
+			},
+			args{
+				map[string]string{"name": "zen"},
+			},
+			false,
+			"{\"name\":\"zen\"}\n",
+		},
 	}
 	for _, tt := range tests {
+		rw := new(mockResponseWriter)
+
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				rw:     &responseWriter{writer: rw, written: false},
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
 			if err := c.JSON(tt.args.i); (err != nil) != tt.wantErr {
 				t.Errorf("Context.JSON() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if rw.body.String() != tt.wantBody {
+				t.Errorf("Context.JSON() body = %s, want %s", rw.body.String(), tt.wantBody)
 			}
 		})
 	}
@@ -570,64 +588,51 @@ func TestContext_JSON(t *testing.T) {
 func TestContext_XML(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
 		params Params
 		parsed bool
 	}
+	type x struct {
+		Name string `xml:"name"`
+	}
+
 	type args struct {
 		i interface{}
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name     string
+		fields   fields
+		args     args
+		wantErr  bool
+		wantBody string
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				nil,
+				false,
+			},
+			args{
+				x{"zen"},
+			},
+			false,
+			"<x><name>zen</name></x>",
+		},
 	}
 	for _, tt := range tests {
+		rw := new(mockResponseWriter)
+
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				rw:     &responseWriter{writer: rw, written: false},
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
 			if err := c.XML(tt.args.i); (err != nil) != tt.wantErr {
 				t.Errorf("Context.XML() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		})
-	}
-}
-
-func TestContext_ASN1(t *testing.T) {
-	type fields struct {
-		Req    *http.Request
-		rw     *responseWriter
-		params Params
-		parsed bool
-	}
-	type args struct {
-		i interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Context{
-				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
-				params: tt.fields.params,
-				parsed: tt.fields.parsed,
-			}
-			if err := c.ASN1(tt.args.i); (err != nil) != tt.wantErr {
-				t.Errorf("Context.ASN1() error = %v, wantErr %v", err, tt.wantErr)
+			if rw.body.String() != tt.wantBody {
+				t.Errorf("Context.XML() body = %s, want %s", rw.body.String(), tt.wantBody)
 			}
 		})
 	}
@@ -636,7 +641,6 @@ func TestContext_ASN1(t *testing.T) {
 func TestContext_WriteStatus(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
 		params Params
 		parsed bool
 	}
@@ -648,17 +652,40 @@ func TestContext_WriteStatus(t *testing.T) {
 		fields fields
 		args   args
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				nil,
+				false,
+			},
+			args{
+				404,
+			},
+		},
+		{"case2",
+			fields{
+				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				nil,
+				false,
+			},
+			args{
+				302,
+			},
+		},
 	}
 	for _, tt := range tests {
+		rw := new(mockResponseWriter)
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				rw:     &responseWriter{writer: rw, written: false},
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
 			c.WriteStatus(tt.args.code)
+			if rw.code != tt.args.code {
+				t.Errorf("Context.WriteStatus() code = %d, want %d", rw.code, tt.args.code)
+			}
 		})
 	}
 }

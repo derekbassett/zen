@@ -1,7 +1,6 @@
 package zen
 
 import (
-	"encoding/asn1"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -201,21 +200,6 @@ func (c *Context) XML(i interface{}) (err error) {
 	err = xml.NewEncoder(c.rw).Encode(i)
 
 	//return
-	return
-}
-
-// ASN1 : write asn1 data to http response writer, with status code 200
-func (c *Context) ASN1(i interface{}) (err error) {
-	// write http status code
-	c.WriteHeader(contentType, applicationASN1)
-
-	// Encode asn1 data to rw
-	bts, err := asn1.Marshal(i)
-	if err != nil {
-		return
-	}
-	//return
-	_, err = c.rw.Write(bts)
 	return
 }
 
