@@ -138,7 +138,26 @@ func TestContext_Form(t *testing.T) {
 		args   args
 		want   string
 	}{
-	// TODO: Add test cases.
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET?name=zen", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				nil,
+				false,
+			},
+			args{"name"},
+			"zen",
+		},
+		{"case2",
+			fields{
+				mustNewRequest("GET", "/GET?name=zen", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				nil,
+				false,
+			},
+			args{"age"},
+			"",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -150,6 +169,58 @@ func TestContext_Form(t *testing.T) {
 			}
 			if got := c.Form(tt.args.key); got != tt.want {
 				t.Errorf("Context.Form() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestContext_Param(t *testing.T) {
+	type fields struct {
+		Req    *http.Request
+		rw     *responseWriter
+		params Params
+		parsed bool
+	}
+	type args struct {
+		key string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET?name=zen", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				false,
+			},
+			args{"uid"},
+			"10086",
+		},
+		{"case1",
+			fields{
+				mustNewRequest("GET", "/GET?name=zen", nil),
+				&responseWriter{writer: new(mockResponseWriter), written: false},
+				Params{Param{Key: "uid", Value: "10086"}},
+				false,
+			},
+			args{"name"},
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Context{
+				Req:    tt.fields.Req,
+				rw:     tt.fields.rw,
+				params: tt.fields.params,
+				parsed: tt.fields.parsed,
+			}
+			if got := c.Param(tt.args.key); got != tt.want {
+				t.Errorf("Context.Param() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -170,9 +241,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
+	}{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
@@ -216,39 +285,6 @@ func TestContext_parseValidateForm(t *testing.T) {
 			}
 			if err := c.parseValidateForm(tt.args.input); (err != nil) != tt.wantErr {
 				t.Errorf("Context.parseValidateForm() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestContext_Param(t *testing.T) {
-	type fields struct {
-		Req    *http.Request
-		rw     *responseWriter
-		params Params
-		parsed bool
-	}
-	type args struct {
-		key string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Context{
-				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
-				params: tt.fields.params,
-				parsed: tt.fields.parsed,
-			}
-			if got := c.Param(tt.args.key); got != tt.want {
-				t.Errorf("Context.Param() = %v, want %v", got, tt.want)
 			}
 		})
 	}
