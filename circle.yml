@@ -1,12 +1,6 @@
-dependencies:
-  pre:
-    - go get -u github.com/mattn/goveralls
-
-
 test:
   override:
-    # './...' is a relative pattern which means all subdirectories
-    - go test -v -race ./...
+    - go get -u github.com/mattn/goveralls
     - GOMAXPROCS=1 go test -timeout 30s ./...
     - GOMAXPROCS=4 go test -timeout 30s -race ./...
-    - $GOPATH/bin/goveralls -service=circle-ci -repotoken $COVERALLS_TOKEN
+    - goveralls -service=circleci -repotoken $COVERALLS_TOKEN
