@@ -1,4 +1,4 @@
-# zen is a lightweight go framework for web development[![CircleCI](https://circleci.com/gh/philchia/zen/tree/master.svg?style=svg)](https://circleci.com/gh/philchia/zen/tree/master)
+# zen is a lightweight go framework for web development [![CircleCI](https://circleci.com/gh/philchia/zen/tree/master.svg?style=svg)](https://circleci.com/gh/philchia/zen/tree/master)
 
 [![Coverage Status](https://coveralls.io/repos/github/philchia/zen/badge.svg?branch=master)](https://coveralls.io/github/philchia/zen?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/philchia/zen)](https://goreportcard.com/report/github.com/philchia/zen)
@@ -115,9 +115,6 @@ func handler(c *zen.Context) {
 
 - [ ] More elegant filter implement
 - [ ] Context support
-- [ ] Handle redirect
-- [ ] Increase test coverage
-- [ ] Documents
 
 ## License
 
