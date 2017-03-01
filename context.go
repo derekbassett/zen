@@ -56,13 +56,7 @@ func (s *Server) putBackContext(c *Context) {
 
 // parseInput will parse request's form and
 func (c *Context) parseInput() error {
-	err1 := c.Req.ParseForm()
-	err2 := c.Req.ParseMultipartForm(32 << 10)
-	c.parsed = true
-	if err1 != nil {
-		return err1
-	}
-	return err2
+	return c.Req.ParseForm()
 }
 
 // Form return request form value with given key
