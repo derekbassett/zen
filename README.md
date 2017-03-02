@@ -26,7 +26,7 @@ zen is a web framework written by go, you will love it if you preffer high perfo
 go get github.com/philchia/zen
 ```
 
-## How to
+## Examples
 
 ### Start a server
 
