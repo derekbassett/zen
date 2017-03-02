@@ -148,7 +148,6 @@ func handler(c *zen.Context) {
 
 ## Todo
 
-- [ ] More elegant filter implement
 - [ ] Context support
 
 ## License
