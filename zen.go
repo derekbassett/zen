@@ -21,6 +21,10 @@ type (
 
 	// Server struct
 	Server struct {
+		Router
+
+		filters Handlers
+
 		trees []*methodTree
 
 		// Enables automatic redirection if the current route can't be matched but a
@@ -69,6 +73,8 @@ func New() *Server {
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
 	}
+
+	s.Router = s.NewGroup("")
 
 	s.contextPool.New = func() interface{} {
 		c := Context{rw: &responseWriter{}}

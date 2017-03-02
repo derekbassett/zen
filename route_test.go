@@ -170,9 +170,23 @@ func TestRouterAPI(t *testing.T) {
 }
 
 func TestRouterAPIAny(t *testing.T) {
-	var get, head, options, post, put, patch, delete, connect, trace bool
+	var get, head, options, post, put, patch, delete, connect, trace, filter, filterGroup, groupHandler bool
 
 	router := New()
+	router.Filter(func(c *Context) {
+		filter = true
+	})
+
+	group := router.NewGroup("/GROUP")
+
+	group.Filter(func(c *Context) {
+		filterGroup = true
+	})
+
+	group.Get("/ANY", func(c *Context) {
+		groupHandler = true
+	})
+
 	router.Any("/ANY", func(c *Context) {
 		switch c.Req.Method {
 		case GET:
@@ -250,6 +264,19 @@ func TestRouterAPIAny(t *testing.T) {
 	router.ServeHTTP(w, r)
 	if !trace {
 		t.Error("routing TRACE failed")
+	}
+
+	if !filter {
+		t.Error("routing filter failed")
+	}
+
+	r, _ = http.NewRequest("GET", "/GROUP/ANY", nil)
+	router.ServeHTTP(w, r)
+	if !filterGroup {
+		t.Error("routing group filter failed")
+	}
+	if !groupHandler {
+		t.Error("routing group handler failed")
 	}
 }
 

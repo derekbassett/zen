@@ -43,78 +43,28 @@ func (s *Server) methodRouteTree(method string) *node {
 }
 
 // Route set handler for given pattern and method
-func (s *Server) Route(method string, path string, handler HandlerFunc) {
+func (s *Server) route(method string, path string, handlers Handlers) {
 	assert(path[0] == '/', "path must begin with '/'")
 	assert(len(method) > 0, "HTTP method can not be empty")
-	assert(handler != nil, "handler cannot be nil")
-
+	assert(handlers != nil && len(handlers) > 0, "handler cannot be nil")
+	h := make(Handlers, len(s.filters)+len(handlers))
+	c := 0
+	c += copy(h[c:], s.filters)
+	c += copy(h[c:], handlers)
 	root := s.methodRouteTree(method)
-	root.addRoute(path, Handlers{handler})
+	root.addRoute(path, h)
 }
 
-// Get adds a new Route for GET requests.
-func (s *Server) Get(path string, handler HandlerFunc) {
-	s.Route(GET, path, handler)
-}
-
-// Post adds a new Route for POST requests.
-func (s *Server) Post(path string, handler HandlerFunc) {
-	s.Route(POST, path, handler)
-}
-
-// Put adds a new Route for PUT requests.
-func (s *Server) Put(path string, handler HandlerFunc) {
-	s.Route(PUT, path, handler)
-}
-
-// Delete adds a new Route for DELETE requests.
-func (s *Server) Delete(path string, handler HandlerFunc) {
-	s.Route(DELETE, path, handler)
-}
-
-// Patch adds a new Route for PATCH requests.
-func (s *Server) Patch(path string, handler HandlerFunc) {
-	s.Route(PATCH, path, handler)
-}
-
-// Head adds a new Route for HEAD requests.
-func (s *Server) Head(path string, handler HandlerFunc) {
-	s.Route(HEAD, path, handler)
-}
-
-// Options adds a new Route for OPTIONS requests.
-func (s *Server) Options(path string, handler HandlerFunc) {
-	s.Route(OPTIONS, path, handler)
-}
-
-// Connect adds a new Route for CONNECT requests.
-func (s *Server) Connect(path string, handler HandlerFunc) {
-	s.Route(CONNECT, path, handler)
-}
-
-// Trace adds a new Route for TRACE requests.
-func (s *Server) Trace(path string, handler HandlerFunc) {
-	s.Route(TRACE, path, handler)
-}
-
-// Any adds new Route for ALL method requests.
-func (s *Server) Any(path string, handler HandlerFunc) {
-	s.Route("GET", path, handler)
-	s.Route("POST", path, handler)
-	s.Route("PUT", path, handler)
-	s.Route("PATCH", path, handler)
-	s.Route("HEAD", path, handler)
-	s.Route("OPTIONS", path, handler)
-	s.Route("DELETE", path, handler)
-	s.Route("CONNECT", path, handler)
-	s.Route("TRACE", path, handler)
+// Filter add a global filter
+func (s *Server) Filter(handler HandlerFunc) {
+	s.filters = append(s.filters, handler)
 }
 
 // Static :Adds a new Route for Static http requests. Serves
 // static files from the specified directory
-func (s *Server) Static(path_ string, dir string) {
-	s.Route(GET, path.Join(path_, "/*filepath"), func(c *Context) {
-		http.StripPrefix(path_, http.FileServer(http.Dir(dir))).ServeHTTP(c.rw, c.Req)
+func (s *Server) Static(staticpath string, dir string) {
+	s.Route(GET, path.Join(staticpath, "/*filepath"), func(c *Context) {
+		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(c.rw, c.Req)
 	})
 }
 
