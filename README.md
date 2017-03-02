@@ -65,7 +65,6 @@ func main() {
     })
 ```
 
-
 ### Group filter
 
 ```go
