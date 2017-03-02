@@ -39,8 +39,43 @@ func main() {
     server.Put("/test",handler)
     server.Patch("/test", handler)
     server.Delete("/test",handler)
-    if err := server.Run(":8080"); err != nil {
-    log.Println(err)
+```
+
+### Group route
+
+```go
+    server := zen.New()
+
+    user := server.NewGroup("/user")
+    {
+        user.Get("/test",handler)
+        user.Post("/test", handler)
+        user.Put("/test",handler)
+        user.Patch("/test", handler)
+        user.Delete("/test",handler)
+    }
+```
+
+### Add a middleware
+
+```go
+    server := zen.New()
+    server.Filter(func(c *zen.Context) {
+        log.Println("root filter")
+    })
+```
+
+
+### Group filter
+
+```go
+    server := zen.New()
+
+    user := server.NewGroup("/user")
+    {
+        user.Filter(func(c *zen.Context) {
+        log.Println("user filter")
+        })
     }
 ```
 
@@ -48,7 +83,7 @@ func main() {
 
 ```go
     server := zen.New()
-    server.Get("/user/:uid",func (c *Context) {
+    server.Get("/user/:uid",func (c *zen.Context) {
         c.JSON(map[string]string{"uid": c.Param("uid")})
     })
     if err := server.Run(":8080"); err != nil {
