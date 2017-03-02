@@ -8,6 +8,18 @@
 
 zen is a web framework written by go, you will love it if you preffer high performance and lightweight!!!
 
+## Features
+
+* High performance HTTP router
+* Restful API
+* Parameters in path
+* Group APIs
+* Form validate and struct bind
+* JSON and XML data bind
+* Built in panic handler
+* Middleware at root or group level
+* Handy response functions
+
 ## Installation
 
 ```bash
