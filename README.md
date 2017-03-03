@@ -120,16 +120,6 @@ func handler(c *zen.Context) {
 }
 ```
 
-### Use pprof
-
-```go
-    server := zen.New()
-    server.PProf("/debug/pprof")
-    if err := server.Run(":8080"); err != nil {
-    log.Println(err)
-    }
-```
-
 ### Handle panic
 
 ```go

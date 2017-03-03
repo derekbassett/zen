@@ -585,46 +585,6 @@ func TestRouterLookup(t *testing.T) {
 	}
 }
 
-// type mockFileSystem struct {
-// 	opened bool
-// }
-
-// func (mfs *mockFileSystem) Open(name string) (http.File, error) {
-// 	mfs.opened = true
-// 	return nil, errors.New("this is just a mock")
-// }
-
-func TestServer_PProf(t *testing.T) {
-	type fields struct {
-	}
-	type args struct {
-		pattern string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		{
-			"case1",
-			fields{},
-			args{
-				"/pprof",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := New()
-			s.PProf(tt.args.pattern)
-			handlers, _, _ := s.Lookup("GET", tt.args.pattern)
-			if handlers == nil || len(handlers) == 0 {
-				t.Error("PProf handlers get nil")
-			}
-		})
-	}
-}
-
 func TestServer_Static(t *testing.T) {
 	testRoot, _ := os.Getwd()
 	f, err := ioutil.TempFile(testRoot, "")

@@ -2,7 +2,6 @@ package zen
 
 import (
 	"net/http"
-	"net/http/pprof"
 	"path"
 )
 
@@ -66,11 +65,6 @@ func (s *Server) Static(staticpath string, dir string) {
 	s.Route(GET, path.Join(staticpath, "/*filepath"), func(c *Context) {
 		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(c.rw, c.Req)
 	})
-}
-
-// PProf serve golang's pprof tool
-func (s *Server) PProf(pattern string) {
-	s.Get(pattern, wrapF(pprof.Index))
 }
 
 // HandleNotFound set server's notFoundHandler
