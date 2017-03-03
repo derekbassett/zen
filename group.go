@@ -8,8 +8,8 @@ type group struct {
 	server  *Server
 }
 
-// NewGroup create a group router with base url and shared filter
-func (s *Server) NewGroup(base string, filters ...HandlerFunc) Router {
+// Group create a group router with base url and shared filter
+func (s *Server) Group(base string, filters ...HandlerFunc) Router {
 	return &group{
 		base:    base,
 		filters: filters,

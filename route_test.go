@@ -177,7 +177,7 @@ func TestRouterAPIAny(t *testing.T) {
 		filter = true
 	})
 
-	group := router.NewGroup("/GROUP")
+	group := router.Group("/GROUP")
 
 	group.Filter(func(c *Context) {
 		filterGroup = true

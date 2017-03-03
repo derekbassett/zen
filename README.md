@@ -56,7 +56,7 @@ func main() {
 ```go
     server := zen.New()
 
-    user := server.NewGroup("/user")
+    user := server.Group("/user")
     {
         user.Get("/test",handler)
         user.Post("/test", handler)
@@ -80,7 +80,7 @@ func main() {
 ```go
     server := zen.New()
 
-    user := server.NewGroup("/user")
+    user := server.Group("/user")
     {
         user.Filter(func(c *zen.Context) {
         log.Println("user filter")
@@ -144,10 +144,6 @@ func handler(c *zen.Context) {
     log.Println(err)
     }
 ```
-
-## Todo
-
-- [ ] Context support
 
 ## License
 

@@ -74,7 +74,7 @@ func New() *Server {
 		HandleOPTIONS:          true,
 	}
 
-	s.Router = s.NewGroup("")
+	s.Router = s.Group("")
 
 	s.contextPool.New = func() interface{} {
 		c := Context{rw: &responseWriter{}}
