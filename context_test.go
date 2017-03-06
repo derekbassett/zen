@@ -305,6 +305,27 @@ func TestContext_ParseValidateForm(t *testing.T) {
 	}
 }
 
+func BenchmarkContext_ParseValidateForm(b *testing.B) {
+	type Input struct {
+		Email string
+		Name  string
+		Age   int
+	}
+
+	req := mustNewRequest("GET", "/GET?name=zen&age=22&email=zgrubby@gmail.com", nil)
+	c := &Context{
+		Req:    req,
+		rw:     &responseWriter{writer: new(mockResponseWriter), written: false},
+		parsed: false,
+	}
+	var input = &Input{}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.ParseValidateForm(input)
+	}
+}
+
 func TestContext_BindJSON(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
