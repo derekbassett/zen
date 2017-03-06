@@ -89,7 +89,7 @@ func (s *Server) handlePanic(c *Context) {
 		if s.panicHandler != nil {
 			s.panicHandler(c, err)
 		} else {
-			http.Error(c.rw, "internal server error", http.StatusInternalServerError)
+			http.Error(c.rw, StatusText(StatusInternalServerError), StatusInternalServerError)
 		}
 	}
 }

@@ -17,14 +17,45 @@ const (
 	validMsgName = "msg"
 )
 
-//commonly used mime-types
+// Headers
 const (
-	applicationJSON = "application/json"
-	applicationXML  = "application/xml"
-	textXML         = "text/xml"
-	applicationASN1 = "application/asn1"
+	HeaderAcceptEncoding                = "Accept-Encoding"
+	HeaderAllow                         = "Allow"
+	HeaderAuthorization                 = "Authorization"
+	HeaderContentDisposition            = "Content-Disposition"
+	HeaderContentEncoding               = "Content-Encoding"
+	HeaderContentLength                 = "Content-Length"
+	HeaderContentType                   = "Content-Type"
+	HeaderCookie                        = "Cookie"
+	HeaderSetCookie                     = "Set-Cookie"
+	HeaderIfModifiedSince               = "If-Modified-Since"
+	HeaderLastModified                  = "Last-Modified"
+	HeaderLocation                      = "Location"
+	HeaderUpgrade                       = "Upgrade"
+	HeaderVary                          = "Vary"
+	HeaderWWWAuthenticate               = "WWW-Authenticate"
+	HeaderXForwardedProto               = "X-Forwarded-Proto"
+	HeaderXHTTPMethodOverride           = "X-HTTP-Method-Override"
+	HeaderXForwardedFor                 = "X-Forwarded-For"
+	HeaderXRealIP                       = "X-Real-IP"
+	HeaderServer                        = "Server"
+	HeaderOrigin                        = "Origin"
+	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
+	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
+	HeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
+	HeaderAccessControlAllowMethods     = "Access-Control-Allow-Methods"
+	HeaderAccessControlAllowHeaders     = "Access-Control-Allow-Headers"
+	HeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
+	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
+	HeaderAccessControlMaxAge           = "Access-Control-Max-Age"
 
-	contentType = "Content-Type"
+	// Security
+	HeaderStrictTransportSecurity = "Strict-Transport-Security"
+	HeaderXContentTypeOptions     = "X-Content-Type-Options"
+	HeaderXXSSProtection          = "X-XSS-Protection"
+	HeaderXFrameOptions           = "X-Frame-Options"
+	HeaderContentSecurityPolicy   = "Content-Security-Policy"
+	HeaderXCSRFToken              = "X-CSRF-Token"
 )
 
 type (
@@ -182,7 +213,7 @@ func valid(s string, validate, msg string) error {
 // JSON : write json data to http response writer, with status code 200
 func (c *Context) JSON(i interface{}) (err error) {
 	// write http status code
-	c.WriteHeader(contentType, applicationJSON)
+	c.WriteHeader(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 
 	// Encode json data to rw
 	err = json.NewEncoder(c.rw).Encode(i)
@@ -194,7 +225,7 @@ func (c *Context) JSON(i interface{}) (err error) {
 // XML : write xml data to http response writer, with status code 200
 func (c *Context) XML(i interface{}) (err error) {
 	// write http status code
-	c.WriteHeader(contentType, applicationXML)
+	c.WriteHeader(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
 
 	// Encode xml data to rw
 	err = xml.NewEncoder(c.rw).Encode(i)
@@ -225,6 +256,6 @@ func (c *Context) File(filepath string) {
 
 // Data writes some data into the body stream and updates the HTTP code.
 func (c *Context) Data(cType string, data []byte) {
-	c.WriteHeader(contentType, cType)
+	c.WriteHeader(HeaderContentType, cType)
 	c.rw.Write(data)
 }

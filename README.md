@@ -137,8 +137,8 @@ func handler(c *zen.Context) {
 ```go
     server := zen.New()
     server.HandleNotFound(func(c *zen.Context) {
-        c.WriteStatus(http.StatusNotFound)
-        c.RawStr("page not found")
+        c.WriteStatus(StatusNotFound)
+        c.RawStr(StatusText(StatusNotFound))
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)

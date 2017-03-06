@@ -221,8 +221,8 @@ func (s *Server) handleHTTPRequest(c *Context) {
 					s.methodNotAllowed(c)
 				} else {
 					http.Error(c.rw,
-						http.StatusText(http.StatusMethodNotAllowed),
-						http.StatusMethodNotAllowed,
+						StatusText(StatusMethodNotAllowed),
+						StatusMethodNotAllowed,
 					)
 				}
 				return
