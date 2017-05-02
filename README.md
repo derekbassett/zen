@@ -75,7 +75,7 @@ func main() {
     })
 ```
 
-### Group filter
+### Group layer middleware
 
 ```go
     server := zen.New()
