@@ -104,12 +104,11 @@ func main() {
 
 ```go
 func handler(c *zen.Context) {
-    type Inputs struct {
+    var input struct {
         Name string `form:"name" json:"name"`
         Age  int    `form:"age" json:"age"`
         Mail string `form:"mail" valid:"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}" msg:"Illegal email" json:"mail"`
     }
-    var input Inputs
 
     if err := c.ParseValidForm(&input); err != nil {
         c.JSON(map[string]string{"err": err.Error()})
