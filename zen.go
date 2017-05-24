@@ -65,10 +65,9 @@ type (
 		methodNotAllowed HandlerFunc
 		// contextPool reuse context
 		contextPool sync.Pool
+
 		// debug indicate print debug info
 		debug bool
-		// internal http Server, handler timeout config etc.
-		*http.Server
 	}
 )
 
@@ -81,8 +80,6 @@ func New() *Server {
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
 	}
-	serv := &http.Server{Handler: s}
-	s.Server = serv
 
 	s.Router = s.Group("")
 
@@ -246,15 +243,15 @@ func (s *Server) handleHTTPRequest(c *Context) {
 // Run server on addr
 func (s *Server) Run(addr string) error {
 	s.Debug("Run on", addr, "zen:", Version)
-	s.Addr = addr
-	return s.ListenAndServe()
+	serv := http.Server{Handler: s, Addr: addr}
+	return serv.ListenAndServe()
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
 	s.Debug("Run tls on", addr, "zen:", Version)
-	s.Addr = addr
-	return s.ListenAndServeTLS(certFile, keyFile)
+	serv := http.Server{Handler: s, Addr: addr}
+	return serv.ListenAndServeTLS(certFile, keyFile)
 }
 
 // Debug invoke log.Println if debug enabled
