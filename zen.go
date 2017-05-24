@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 )
 
 const (
@@ -64,8 +65,10 @@ type (
 		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
 		// contextPool reuse context
-		contextPool sync.Pool
-
+		contextPool       sync.Pool
+		readTimeout       time.Duration
+		writeTimeout      time.Duration
+		readHeaderTimeout time.Duration
 		// debug indicate print debug info
 		debug bool
 	}
@@ -240,20 +243,6 @@ func (s *Server) handleHTTPRequest(c *Context) {
 	s.handleNotFound(c)
 }
 
-// Run server on addr
-func (s *Server) Run(addr string) error {
-	s.Debug("Run on", addr, "zen:", Version)
-	serv := http.Server{Handler: s, Addr: addr}
-	return serv.ListenAndServe()
-}
-
-// RunTLS Run server on addr with tls
-func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
-	s.Debug("Run tls on", addr, "zen:", Version)
-	serv := http.Server{Handler: s, Addr: addr}
-	return serv.ListenAndServeTLS(certFile, keyFile)
-}
-
 // Debug invoke log.Println if debug enabled
 func (s *Server) Debug(v ...interface{}) {
 	if s.debug {
@@ -271,4 +260,33 @@ func (s *Server) Debugf(format string, v ...interface{}) {
 // SetDebugEnabled set debug value
 func (s *Server) SetDebugEnabled(debug bool) {
 	s.debug = debug
+}
+
+// ReadTimeout set timeout for read
+func (s *Server) ReadTimeout(d time.Duration) {
+	s.readTimeout = d
+}
+
+// ReadHeaderTimeout set timeout for read header
+func (s *Server) ReadHeaderTimeout(d time.Duration) {
+	s.readHeaderTimeout = d
+}
+
+// WriteTimeout set timeout for read write
+func (s *Server) WriteTimeout(d time.Duration) {
+	s.writeTimeout = d
+}
+
+// Run server on addr
+func (s *Server) Run(addr string) error {
+	s.Debug("Run on", addr, "zen:", Version)
+	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.readTimeout, ReadHeaderTimeout: s.readHeaderTimeout, WriteTimeout: s.writeTimeout}
+	return serv.ListenAndServe()
+}
+
+// RunTLS Run server on addr with tls
+func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
+	s.Debug("Run tls on", addr, "zen:", Version)
+	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.readTimeout, ReadHeaderTimeout: s.readHeaderTimeout, WriteTimeout: s.writeTimeout}
+	return serv.ListenAndServeTLS(certFile, keyFile)
 }
