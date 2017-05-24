@@ -238,10 +238,12 @@ func (s *Server) handleHTTPRequest(c *Context) {
 
 // Run server on addr
 func (s *Server) Run(addr string) error {
-	return http.ListenAndServe(addr, s)
+	s.Addr = addr
+	return s.ListenAndServe()
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
-	return http.ListenAndServeTLS(addr, certFile, keyFile, s)
+	s.Addr = addr
+	return s.ListenAndServeTLS(certFile, keyFile)
 }
