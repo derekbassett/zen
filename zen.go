@@ -269,14 +269,14 @@ func (s *Server) SetDebugEnabled(debug bool) {
 
 // Run server on addr
 func (s *Server) Run(addr string) error {
-	s.Debug("Run on", addr, "zen:", Version)
+	s.Debug("\033[0;32m", "Run on", addr, "zen:", Version, "\033[0m")
 	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
 	return serv.ListenAndServe()
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
-	s.Debug("Run tls on", addr, "zen:", Version)
+	s.Debug("\033[0;32m", "Run tls on", addr, "zen:", Version, "\033[0m")
 	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
 	return serv.ListenAndServeTLS(certFile, keyFile)
 }
