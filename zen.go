@@ -1,6 +1,7 @@
 package zen
 
 import (
+	"log"
 	"net/http"
 	"sync"
 )
@@ -55,12 +56,18 @@ type (
 
 		// If enabled, the router automatically replies to OPTIONS requests.
 		// Custom OPTIONS handlers take priority over automatic replies.
-		HandleOPTIONS   bool
+		HandleOPTIONS bool
+		// notFoundHandler handle 404
 		notFoundHandler HandlerFunc
-		panicHandler    PanicHandler
-
+		// panicHandler handle internal panic
+		panicHandler PanicHandler
+		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
-		contextPool      sync.Pool
+		// contextPool reuse context
+		contextPool sync.Pool
+		// debug indicate print debug info
+		debug bool
+		// internal http Server, handler timeout config etc.
 		*http.Server
 	}
 )
@@ -238,12 +245,33 @@ func (s *Server) handleHTTPRequest(c *Context) {
 
 // Run server on addr
 func (s *Server) Run(addr string) error {
+	s.Debug("Run on", addr, "zen:", Version)
 	s.Addr = addr
 	return s.ListenAndServe()
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
+	s.Debug("Run tls on", addr, "zen:", Version)
 	s.Addr = addr
 	return s.ListenAndServeTLS(certFile, keyFile)
+}
+
+// Debug invoke log.Println if debug enabled
+func (s *Server) Debug(v ...interface{}) {
+	if s.debug {
+		log.Println(v...)
+	}
+}
+
+// Debugf invoke log.Printf if debug enabled
+func (s *Server) Debugf(format string, v ...interface{}) {
+	if s.debug {
+		log.Printf(format, v...)
+	}
+}
+
+// SetDebugEnabled set debug value
+func (s *Server) SetDebugEnabled(debug bool) {
+	s.debug = debug
 }
