@@ -7,7 +7,7 @@ import (
 
 const (
 	// Version is current version num
-	Version = "v1.0.0RC2"
+	Version = "v1.0.0"
 )
 
 // ensure Server implement http.Handler
