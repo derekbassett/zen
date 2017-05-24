@@ -61,6 +61,7 @@ type (
 
 		methodNotAllowed HandlerFunc
 		contextPool      sync.Pool
+		*http.Server
 	}
 )
 
@@ -73,6 +74,8 @@ func New() *Server {
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
 	}
+	serv := &http.Server{Handler: s}
+	s.Server = serv
 
 	s.Router = s.Group("")
 
