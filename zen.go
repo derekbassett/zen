@@ -58,17 +58,22 @@ type (
 		// If enabled, the router automatically replies to OPTIONS requests.
 		// Custom OPTIONS handlers take priority over automatic replies.
 		HandleOPTIONS bool
+
 		// notFoundHandler handle 404
 		notFoundHandler HandlerFunc
 		// panicHandler handle internal panic
 		panicHandler PanicHandler
 		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
+
 		// contextPool reuse context
-		contextPool       sync.Pool
-		readTimeout       time.Duration
-		writeTimeout      time.Duration
-		readHeaderTimeout time.Duration
+		contextPool sync.Pool
+
+		// timeout config
+		ReadTimeout       time.Duration
+		WriteTimeout      time.Duration
+		ReadHeaderTimeout time.Duration
+
 		// debug indicate print debug info
 		debug bool
 	}
@@ -262,31 +267,16 @@ func (s *Server) SetDebugEnabled(debug bool) {
 	s.debug = debug
 }
 
-// ReadTimeout set timeout for read
-func (s *Server) ReadTimeout(d time.Duration) {
-	s.readTimeout = d
-}
-
-// ReadHeaderTimeout set timeout for read header
-func (s *Server) ReadHeaderTimeout(d time.Duration) {
-	s.readHeaderTimeout = d
-}
-
-// WriteTimeout set timeout for read write
-func (s *Server) WriteTimeout(d time.Duration) {
-	s.writeTimeout = d
-}
-
 // Run server on addr
 func (s *Server) Run(addr string) error {
 	s.Debug("Run on", addr, "zen:", Version)
-	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.readTimeout, ReadHeaderTimeout: s.readHeaderTimeout, WriteTimeout: s.writeTimeout}
+	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
 	return serv.ListenAndServe()
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
 	s.Debug("Run tls on", addr, "zen:", Version)
-	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.readTimeout, ReadHeaderTimeout: s.readHeaderTimeout, WriteTimeout: s.writeTimeout}
+	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
 	return serv.ListenAndServeTLS(certFile, keyFile)
 }
