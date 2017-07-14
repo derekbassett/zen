@@ -30,6 +30,9 @@ type (
 
 	// Server struct
 	Server struct {
+		// internal http server
+		http.Server
+		// Router
 		Router
 
 		filters Handlers
@@ -247,12 +250,12 @@ func (s *Server) handleHTTPRequest(c *Context) {
 
 // Run server on addr
 func (s *Server) Run(addr string) error {
-	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
-	return serv.ListenAndServe()
+	s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
+	return s.ListenAndServe()
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
-	serv := http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
-	return serv.ListenAndServeTLS(certFile, keyFile)
+	s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
+	return s.ListenAndServeTLS(certFile, keyFile)
 }
