@@ -80,7 +80,7 @@ type (
 		ReadTimeout       time.Duration
 		WriteTimeout      time.Duration
 		ReadHeaderTimeout time.Duration
-
+		ShutdownDuration  time.Duration
 		// debug indicate print debug info
 		debug bool
 	}
@@ -258,4 +258,13 @@ func (s *Server) Run(addr string) error {
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
 	s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
 	return s.ListenAndServeTLS(certFile, keyFile)
+}
+
+// Shutdown with deadline
+func (s *Server) Shutdown() error {
+	ctx := s.getContext(nil, nil)
+	if s.ShutdownDuration > 0 {
+		ctx, _ = ctx.WithDeadline(time.Now().Add(s.ShutdownDuration))
+	}
+	return s.Server.Shutdown(ctx)
 }

@@ -30,3 +30,11 @@ func TestServer_RunTLS(t *testing.T) {
 		t.Error("Run server got nil, want port already used")
 	}
 }
+
+func TestServerShutdown(t *testing.T) {
+	server := New()
+	server.ShutdownDuration = time.Second
+	if err := server.Shutdown(); err != nil {
+		t.Log(err.Error())
+	}
+}

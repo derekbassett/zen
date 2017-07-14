@@ -144,6 +144,26 @@ func handler(c *zen.Context) {
     }
 ```
 
+### Context support
+
+```go
+    server := zen.New()
+    server.HandleNotFound(func(c *zen.Context) {
+        db, _ := sql.Open("mysql", "dsn")
+        db.QueryContext(c, "SELECT * FROM table;")
+    })
+    if err := server.Run(":8080"); err != nil {
+    log.Println(err)
+    }
+```
+
+### Shutdown
+
+```go
+    server := zen.New()
+    server.Shutdown()
+```
+
 ## License
 
 zen is published under MIT license

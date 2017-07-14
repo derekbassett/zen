@@ -101,6 +101,8 @@ func (c *Context) Dup(ctx context.Context) *Context {
 	ret.Req = c.Req
 	ret.rw = c.rw
 	ret.Context = ctx
+	ret.parsed = c.parsed
+	ret.params = c.params
 	return ret
 }
 
