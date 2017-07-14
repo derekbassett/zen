@@ -126,7 +126,7 @@ func handler(c *zen.Context) {
 ```go
     server := zen.New()
     server.HandlePanic(func(c *zen.Context, err interface{}) {
-        c.RawStr(fmt.Sprint(err))
+        c.WriteString(fmt.Sprint(err))
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)
@@ -139,7 +139,7 @@ func handler(c *zen.Context) {
     server := zen.New()
     server.HandleNotFound(func(c *zen.Context) {
         c.WriteStatus(StatusNotFound)
-        c.RawStr(StatusText(StatusNotFound))
+        c.WriteString(StatusText(StatusNotFound))
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)

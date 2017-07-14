@@ -244,10 +244,7 @@ func (c *Context) JSON(i interface{}) (err error) {
 	c.WriteHeader(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 
 	// Encode json data to rw
-	err = json.NewEncoder(c.rw).Encode(i)
-
-	//return
-	return
+	return json.NewEncoder(c.rw).Encode(i)
 }
 
 // XML : write xml data to http response writer, with status code 200
@@ -256,10 +253,7 @@ func (c *Context) XML(i interface{}) (err error) {
 	c.WriteHeader(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
 
 	// Encode xml data to rw
-	err = xml.NewEncoder(c.rw).Encode(i)
-
-	//return
-	return
+	return xml.NewEncoder(c.rw).Encode(i)
 }
 
 // WriteStatus set response's status code
@@ -272,18 +266,18 @@ func (c *Context) WriteHeader(k, v string) {
 	c.rw.Header().Add(k, v)
 }
 
-// RawStr write raw string
-func (c *Context) RawStr(s string) {
+// WriteString write raw string
+func (c *Context) WriteString(s string) {
 	io.WriteString(c.rw, s)
 }
 
-// File serve file
-func (c *Context) File(filepath string) {
+// WriteFile serve file
+func (c *Context) WriteFile(filepath string) {
 	http.ServeFile(c.rw, c.Req, filepath)
 }
 
-// Data writes some data into the body stream and updates the HTTP code.
-func (c *Context) Data(cType string, data []byte) {
-	c.WriteHeader(HeaderContentType, cType)
+// WriteData writes some data into the body stream and updates the HTTP code.
+func (c *Context) WriteData(contentType string, data []byte) {
+	c.WriteHeader(HeaderContentType, contentType)
 	c.rw.Write(data)
 }

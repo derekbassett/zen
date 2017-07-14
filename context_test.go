@@ -795,9 +795,9 @@ func TestContext_RawStr(t *testing.T) {
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
-			c.RawStr(tt.args.s)
+			c.WriteString(tt.args.s)
 			if rw.Body.String() != tt.args.s {
-				t.Errorf("Context.RawStr() get = %s, want %s", rw.Body.String(), tt.args.s)
+				t.Errorf("Context.WriteString() get = %s, want %s", rw.Body.String(), tt.args.s)
 			}
 		})
 	}
@@ -840,9 +840,9 @@ func TestContext_Data(t *testing.T) {
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
-			c.Data(tt.args.cType, tt.args.data)
+			c.WriteData(tt.args.cType, tt.args.data)
 			if rw.Body.String() != string(tt.args.data) {
-				t.Errorf("Context.Data() get = %s, want %s", rw.Body.String(), string(tt.args.data))
+				t.Errorf("Context.WriteData() get = %s, want %s", rw.Body.String(), string(tt.args.data))
 			}
 		})
 	}
@@ -860,7 +860,7 @@ func TestContext_File(t *testing.T) {
 
 	server := New()
 	server.Get("/file", func(c *Context) {
-		c.File(f.Name())
+		c.WriteFile(f.Name())
 	})
 	req := mustNewRequest("GET", "/file", nil)
 	rw := httptest.NewRecorder()

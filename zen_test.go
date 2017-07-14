@@ -9,7 +9,7 @@ func TestServer_Run(t *testing.T) {
 	server := New()
 
 	go func() {
-		server.Get("/example", func(c *Context) { c.RawStr("ok") })
+		server.Get("/example", func(c *Context) { c.WriteString("ok") })
 		if err := server.Run(":8080"); err != nil {
 			t.Error("Run server got error", err)
 		}
@@ -24,7 +24,7 @@ func TestServer_Run(t *testing.T) {
 func TestServer_RunTLS(t *testing.T) {
 	server := New()
 
-	server.Get("/example", func(c *Context) { c.RawStr("ok") })
+	server.Get("/example", func(c *Context) { c.WriteString("ok") })
 
 	if err := server.RunTLS(":8080", "", ""); err == nil {
 		t.Error("Run server got nil, want port already used")
