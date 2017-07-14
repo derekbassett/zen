@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
 	"strings"
@@ -100,7 +101,7 @@ func TestContext_parseInput(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				nil,
 				false,
 			},
@@ -141,7 +142,7 @@ func TestContext_Form(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				nil,
 				false,
 			},
@@ -151,7 +152,7 @@ func TestContext_Form(t *testing.T) {
 		{"case2",
 			fields{
 				mustNewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				nil,
 				false,
 			},
@@ -193,7 +194,7 @@ func TestContext_Param(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
 			},
@@ -203,7 +204,7 @@ func TestContext_Param(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
 			},
@@ -246,7 +247,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET?email=golang@gmail.com", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
 			},
@@ -261,7 +262,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		{"case2",
 			fields{
 				mustNewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -276,7 +277,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		{"case3",
 			fields{
 				mustNewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -313,7 +314,7 @@ func BenchmarkContext_ParseValidateForm(b *testing.B) {
 	req := mustNewRequest("GET", "/GET?name=zen&age=22&email=zgrubby@gmail.com", nil)
 	c := &Context{
 		Req:    req,
-		rw:     &responseWriter{writer: new(mockResponseWriter), written: false},
+		rw:     &responseWriter{writer: httptest.NewRecorder(), written: false},
 		parsed: false,
 	}
 	var input = &Input{}
@@ -343,7 +344,7 @@ func TestContext_BindJSON(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET", strings.NewReader(`{"name":"zen"}`)),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -358,7 +359,7 @@ func TestContext_BindJSON(t *testing.T) {
 		{"case2",
 			fields{
 				mustNewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -404,7 +405,7 @@ func TestContext_BindXML(t *testing.T) {
 		{"case1",
 			fields{
 				mustNewRequest("GET", "/GET", strings.NewReader(`<x><name>hello</name></x>`)),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -419,7 +420,7 @@ func TestContext_BindXML(t *testing.T) {
 		{"case2",
 			fields{
 				mustNewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
-				&responseWriter{writer: new(mockResponseWriter), written: false},
+				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -645,7 +646,7 @@ func TestContext_JSON(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rw := new(mockResponseWriter)
+		rw := httptest.NewRecorder()
 
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
@@ -658,8 +659,8 @@ func TestContext_JSON(t *testing.T) {
 				t.Errorf("Context.JSON() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if rw.body.String() != tt.wantBody {
-				t.Errorf("Context.JSON() body = %s, want %s", rw.body.String(), tt.wantBody)
+			if rw.Body.String() != tt.wantBody {
+				t.Errorf("Context.JSON() body = %s, want %s", rw.Body.String(), tt.wantBody)
 			}
 		})
 	}
@@ -699,7 +700,7 @@ func TestContext_XML(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rw := new(mockResponseWriter)
+		rw := httptest.NewRecorder()
 
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
@@ -711,8 +712,8 @@ func TestContext_XML(t *testing.T) {
 			if err := c.XML(tt.args.i); (err != nil) != tt.wantErr {
 				t.Errorf("Context.XML() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if rw.body.String() != tt.wantBody {
-				t.Errorf("Context.XML() body = %s, want %s", rw.body.String(), tt.wantBody)
+			if rw.Body.String() != tt.wantBody {
+				t.Errorf("Context.XML() body = %s, want %s", rw.Body.String(), tt.wantBody)
 			}
 		})
 	}
@@ -754,7 +755,7 @@ func TestContext_WriteStatus(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rw := new(mockResponseWriter)
+		rw := httptest.NewRecorder()
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
@@ -763,8 +764,8 @@ func TestContext_WriteStatus(t *testing.T) {
 				parsed: tt.fields.parsed,
 			}
 			c.WriteStatus(tt.args.code)
-			if rw.code != tt.args.code {
-				t.Errorf("Context.WriteStatus() code = %d, want %d", rw.code, tt.args.code)
+			if rw.Code != tt.args.code {
+				t.Errorf("Context.WriteStatus() code = %d, want %d", rw.Code, tt.args.code)
 			}
 		})
 	}
@@ -796,7 +797,7 @@ func TestContext_RawStr(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rw := new(mockResponseWriter)
+		rw := httptest.NewRecorder()
 
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
@@ -806,8 +807,8 @@ func TestContext_RawStr(t *testing.T) {
 				parsed: tt.fields.parsed,
 			}
 			c.RawStr(tt.args.s)
-			if rw.body.String() != tt.args.s {
-				t.Errorf("Context.RawStr() get = %s, want %s", rw.body.String(), tt.args.s)
+			if rw.Body.String() != tt.args.s {
+				t.Errorf("Context.RawStr() get = %s, want %s", rw.Body.String(), tt.args.s)
 			}
 		})
 	}
@@ -841,7 +842,7 @@ func TestContext_Data(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rw := new(mockResponseWriter)
+		rw := httptest.NewRecorder()
 
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
@@ -851,8 +852,8 @@ func TestContext_Data(t *testing.T) {
 				parsed: tt.fields.parsed,
 			}
 			c.Data(tt.args.cType, tt.args.data)
-			if rw.body.String() != string(tt.args.data) {
-				t.Errorf("Context.Data() get = %s, want %s", rw.body.String(), string(tt.args.data))
+			if rw.Body.String() != string(tt.args.data) {
+				t.Errorf("Context.Data() get = %s, want %s", rw.Body.String(), string(tt.args.data))
 			}
 		})
 	}
@@ -873,14 +874,14 @@ func TestContext_File(t *testing.T) {
 		c.File(f.Name())
 	})
 	req := mustNewRequest("GET", "/file", nil)
-	rw := new(mockResponseWriter)
+	rw := httptest.NewRecorder()
 
 	server.ServeHTTP(rw, req)
 
-	if rw.code != 200 {
-		t.Errorf("Context.File get code %d want %d", rw.code, 200)
+	if rw.Code != 200 {
+		t.Errorf("Context.File get code %d want %d", rw.Code, 200)
 	}
-	if rw.body.String() != "zen" {
-		t.Errorf("Context.File get body %s want %s", rw.body.String(), "zen")
+	if rw.Body.String() != "zen" {
+		t.Errorf("Context.File get body %s want %s", rw.Body.String(), "zen")
 	}
 }

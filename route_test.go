@@ -1,7 +1,6 @@
 package zen
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,27 +10,6 @@ import (
 	"reflect"
 	"testing"
 )
-
-type mockResponseWriter struct {
-	code int
-	body bytes.Buffer
-}
-
-func (m *mockResponseWriter) Header() (h http.Header) {
-	return http.Header{}
-}
-
-func (m *mockResponseWriter) Write(p []byte) (n int, err error) {
-	return m.body.Write(p)
-}
-
-func (m *mockResponseWriter) WriteString(s string) (n int, err error) {
-	return m.body.WriteString(s)
-}
-
-func (m *mockResponseWriter) WriteHeader(code int) {
-	m.code = code
-}
 
 func TestParams(t *testing.T) {
 	ps := Params{
@@ -483,7 +461,7 @@ func TestRouterPanicHandler(t *testing.T) {
 		panic("oops!")
 	})
 
-	w := new(mockResponseWriter)
+	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("PUT", "/user/gopher", nil)
 
 	router.ServeHTTP(w, req)
@@ -500,12 +478,12 @@ func TestRouterDefaultPanicHandler(t *testing.T) {
 		panic("oops!")
 	})
 
-	w := new(mockResponseWriter)
+	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("PUT", "/user/gopher", nil)
 
 	router.ServeHTTP(w, req)
 
-	if w.code != http.StatusInternalServerError {
+	if w.Code != http.StatusInternalServerError {
 		t.Fatal("simulating failed")
 	}
 }
@@ -575,13 +553,13 @@ func TestServer_Static(t *testing.T) {
 	server := New()
 	server.Static("/static", dir)
 
-	req := mustNewRequest("GET", "/static/"+filename, nil)
-	rw := new(mockResponseWriter)
+	req := httptest.NewRequest("GET", "/static/"+filename, nil)
+	rw := httptest.NewRecorder()
 	server.ServeHTTP(rw, req)
-	if rw.code != 200 {
+	if rw.Code != 200 {
 		t.Error("Get static file code != 200")
 	}
-	if rw.body.String() != "zen" {
-		t.Errorf("Get static file body want %s got %s", "zen", rw.body.String())
+	if rw.Body.String() != "zen" {
+		t.Errorf("Get static file body want %s got %s", "zen", rw.Body.String())
 	}
 }
