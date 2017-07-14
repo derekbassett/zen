@@ -61,9 +61,9 @@ func TestRouter(t *testing.T) {
 		}
 	})
 
-	w := new(mockResponseWriter)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/user/gopher", nil)
 
-	req, _ := http.NewRequest("GET", "/user/gopher", nil)
 	router.ServeHTTP(w, req)
 
 	if !routed {
@@ -109,63 +109,61 @@ func TestRouterAPI(t *testing.T) {
 		handlerFunc = true
 	})
 
-	w := new(mockResponseWriter)
-
-	r, _ := http.NewRequest("GET", "/GET", nil)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/GET", nil)
 	router.ServeHTTP(w, r)
 	if !get {
 		t.Error("routing GET failed")
 	}
-
-	r, _ = http.NewRequest("HEAD", "/GET", nil)
+	r = httptest.NewRequest("HEAD", "/GET", nil)
 	router.ServeHTTP(w, r)
 	if !head {
 		t.Error("routing HEAD failed")
 	}
 
-	r, _ = http.NewRequest("OPTIONS", "/GET", nil)
+	r = httptest.NewRequest("OPTIONS", "/GET", nil)
 	router.ServeHTTP(w, r)
 	if !options {
 		t.Error("routing OPTIONS failed")
 	}
 
-	r, _ = http.NewRequest("POST", "/POST", nil)
+	r = httptest.NewRequest("POST", "/POST", nil)
 	router.ServeHTTP(w, r)
 	if !post {
 		t.Error("routing POST failed")
 	}
 
-	r, _ = http.NewRequest("PUT", "/PUT", nil)
+	r = httptest.NewRequest("PUT", "/PUT", nil)
 	router.ServeHTTP(w, r)
 	if !put {
 		t.Error("routing PUT failed")
 	}
 
-	r, _ = http.NewRequest("PATCH", "/PATCH", nil)
+	r = httptest.NewRequest("PATCH", "/PATCH", nil)
 	router.ServeHTTP(w, r)
 	if !patch {
 		t.Error("routing PATCH failed")
 	}
 
-	r, _ = http.NewRequest("DELETE", "/DELETE", nil)
+	r = httptest.NewRequest("DELETE", "/DELETE", nil)
 	router.ServeHTTP(w, r)
 	if !delete {
 		t.Error("routing DELETE failed")
 	}
 
-	r, _ = http.NewRequest("CONNECT", "/CONNECT", nil)
+	r = httptest.NewRequest("CONNECT", "/CONNECT", nil)
 	router.ServeHTTP(w, r)
 	if !connect {
 		t.Error("routing CONNECT failed")
 	}
 
-	r, _ = http.NewRequest("TRACE", "/TRACE", nil)
+	r = httptest.NewRequest("TRACE", "/TRACE", nil)
 	router.ServeHTTP(w, r)
 	if !trace {
 		t.Error("routing TRACE failed")
 	}
 
-	r, _ = http.NewRequest("GET", "/HandlerFunc", nil)
+	r = httptest.NewRequest("GET", "/HandlerFunc", nil)
 	router.ServeHTTP(w, r)
 	if !handlerFunc {
 		t.Error("routing HandlerFunc failed")
@@ -202,57 +200,57 @@ func TestRouterAPIAny(t *testing.T) {
 		}
 	})
 
-	w := new(mockResponseWriter)
+	w := httptest.NewRecorder()
 
-	r, _ := http.NewRequest("GET", "/ANY", nil)
+	r := httptest.NewRequest("GET", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !get {
-		t.Error("routing GET failed", w.code, w.body)
+		t.Error("routing GET failed")
 	}
 
-	r, _ = http.NewRequest("HEAD", "/ANY", nil)
+	r = httptest.NewRequest("HEAD", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !head {
 		t.Error("routing HEAD failed")
 	}
 
-	r, _ = http.NewRequest("OPTIONS", "/ANY", nil)
+	r = httptest.NewRequest("OPTIONS", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !options {
 		t.Error("routing OPTIONS failed")
 	}
 
-	r, _ = http.NewRequest("POST", "/ANY", nil)
+	r = httptest.NewRequest("POST", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !post {
 		t.Error("routing POST failed")
 	}
 
-	r, _ = http.NewRequest("PUT", "/ANY", nil)
+	r = httptest.NewRequest("PUT", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !put {
 		t.Error("routing PUT failed")
 	}
 
-	r, _ = http.NewRequest("PATCH", "/ANY", nil)
+	r = httptest.NewRequest("PATCH", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !patch {
 		t.Error("routing PATCH failed")
 	}
 
-	r, _ = http.NewRequest("DELETE", "/ANY", nil)
+	r = httptest.NewRequest("DELETE", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !delete {
 		t.Error("routing DELETE failed")
 	}
 
-	r, _ = http.NewRequest("CONNECT", "/ANY", nil)
+	r = httptest.NewRequest("CONNECT", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !connect {
 		t.Error("routing CONNECT failed")
 	}
 
-	r, _ = http.NewRequest("TRACE", "/ANY", nil)
+	r = httptest.NewRequest("TRACE", "/ANY", nil)
 	router.ServeHTTP(w, r)
 	if !trace {
 		t.Error("routing TRACE failed")
@@ -281,7 +279,7 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test not allowed
 	// * (server)
-	r, _ := http.NewRequest("OPTIONS", "*", nil)
+	r := httptest.NewRequest("OPTIONS", "*", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
 	if !(w.Code == http.StatusOK) {
@@ -291,8 +289,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	}
 
 	// path
-	r, _ = http.NewRequest("OPTIONS", "/path", nil)
-	w = httptest.NewRecorder()
+	r = httptest.NewRequest("OPTIONS", "/path", nil)
 	router.ServeHTTP(w, r)
 	if !(w.Code == http.StatusOK) {
 		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
@@ -300,8 +297,7 @@ func TestRouterOPTIONS(t *testing.T) {
 		t.Error("unexpected Allow header value: " + allow)
 	}
 
-	r, _ = http.NewRequest("OPTIONS", "/doesnotexist", nil)
-	w = httptest.NewRecorder()
+	r = httptest.NewRequest("OPTIONS", "/doesnotexist", nil)
 	router.ServeHTTP(w, r)
 	if !(w.Code == http.StatusNotFound) {
 		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
@@ -312,7 +308,7 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test again
 	// * (server)
-	r, _ = http.NewRequest("OPTIONS", "*", nil)
+	r = httptest.NewRequest("OPTIONS", "*", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
 	if !(w.Code == http.StatusOK) {
@@ -322,8 +318,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	}
 
 	// path
-	r, _ = http.NewRequest("OPTIONS", "/path", nil)
-	w = httptest.NewRecorder()
+	r = httptest.NewRequest("OPTIONS", "/path", nil)
 	router.ServeHTTP(w, r)
 	if !(w.Code == http.StatusOK) {
 		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
@@ -339,8 +334,7 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test again
 	// * (server)
-	r, _ = http.NewRequest("OPTIONS", "*", nil)
-	w = httptest.NewRecorder()
+	r = httptest.NewRequest("OPTIONS", "*", nil)
 	router.ServeHTTP(w, r)
 	if !(w.Code == http.StatusOK) {
 		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
@@ -569,8 +563,7 @@ func TestRouterLookup(t *testing.T) {
 }
 
 func TestServer_Static(t *testing.T) {
-	testRoot, _ := os.Getwd()
-	f, err := ioutil.TempFile(testRoot, "")
+	f, err := ioutil.TempFile("", "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -579,7 +572,6 @@ func TestServer_Static(t *testing.T) {
 	f.Close()
 
 	dir, filename := filepath.Split(f.Name())
-	fmt.Println(dir, filename)
 	server := New()
 	server.Static("/static", dir)
 
