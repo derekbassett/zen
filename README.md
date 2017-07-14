@@ -19,7 +19,8 @@ zen is a web framework written by go, you will love it if you preffer high perfo
 * Built in panic handler
 * Middleware at root or group level
 * Handy response functions
-* context support
+* Context support
+* Graceful shutdown
 
 ## Installation
 
