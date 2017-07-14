@@ -97,8 +97,5 @@ func joinPath(base, sub string) string {
 }
 
 func (g *group) combineHandlers(handler HandlerFunc) Handlers {
-	var handlers Handlers
-	handlers = append(handlers, g.filters...)
-	handlers = append(handlers, handler)
-	return handlers
+	return append(g.filters, handler)
 }

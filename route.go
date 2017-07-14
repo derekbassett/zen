@@ -56,7 +56,7 @@ func (s *Server) route(method string, path string, handlers Handlers) {
 
 // Filter add a global filter
 func (s *Server) Filter(handler HandlerFunc) {
-	s.filters = append(s.filters, handler)
+	s.Router.Filter(handler)
 }
 
 // Static :Adds a new Route for Static http requests. Serves

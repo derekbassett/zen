@@ -82,6 +82,7 @@ func (s *Server) getContext(rw http.ResponseWriter, req *http.Request) *Context 
 func (s *Server) putBackContext(c *Context) {
 	c.params = c.params[0:0]
 	c.parsed = false
+	c.rw.written = false
 	c.Req = nil
 	c.rw.writer = nil
 	c.Context = nil

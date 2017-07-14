@@ -72,9 +72,12 @@ func TestRouter(t *testing.T) {
 }
 
 func TestRouterAPI(t *testing.T) {
-	var get, head, options, post, put, patch, delete, connect, trace, handlerFunc bool
+	var filter, get, head, options, post, put, patch, delete, connect, trace, handlerFunc bool
 
 	router := New()
+	router.Filter(func(c *Context) {
+		filter = true
+	})
 	router.Get("/GET", func(c *Context) {
 		get = true
 	})
