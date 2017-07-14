@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestServer_getContext(t *testing.T) {
@@ -63,6 +64,25 @@ func BenchmarkGetContext(b *testing.B) {
 func mustNewRequest(method string, urlStr string, body io.Reader) *http.Request {
 	ret, _ := http.NewRequest(method, urlStr, body)
 	return ret
+}
+
+func TestContextCancel(t *testing.T) {
+	s := &Server{}
+	ctx := s.getContext(nil, nil)
+	ctx, cancel := ctx.WithCancel()
+	cancel()
+	if err := ctx.Err(); err == nil {
+		t.Error("ctx.Err() want err got nil")
+	}
+}
+
+func TestWithDeadline(t *testing.T) {
+	s := &Server{}
+	ctx := s.getContext(nil, nil)
+	ctx, _ = ctx.WithDeadline(time.Now())
+	if err := ctx.Err(); err == nil {
+		t.Error("ctx.Err() want err got nil")
+	}
 }
 
 func TestContext_parseInput(t *testing.T) {
