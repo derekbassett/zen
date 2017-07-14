@@ -8,30 +8,22 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
 
 func TestServer_getContext(t *testing.T) {
-	type fields struct {
-		notFoundHandler HandlerFunc
-		panicHandler    PanicHandler
-		interceptors    []HandlerFunc
-		contextPool     *sync.Pool
-	}
 	type args struct {
 		rw  http.ResponseWriter
 		req *http.Request
 	}
 	tests := []struct {
 		name    string
-		fields  fields
 		args    args
 		wantNil bool
 	}{
-		{"case1",
-			fields{},
+		{
+			"case1",
 			args{
 				nil, nil,
 			},
@@ -40,10 +32,7 @@ func TestServer_getContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{
-				notFoundHandler: tt.fields.notFoundHandler,
-				panicHandler:    tt.fields.panicHandler,
-			}
+			s := &Server{}
 			if got := s.getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
 				t.Errorf("Server.getContext() = %v, want nil? %v", got, tt.wantNil)
 			} else {
