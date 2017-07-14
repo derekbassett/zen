@@ -14,7 +14,7 @@ const (
 // ensure Server implement http.Handler
 var _ http.Handler = new(Server)
 
-// global contextPool reuse context
+// global contextPool to reuse context
 var contextPool = &sync.Pool{
 	New: func() interface{} {
 		c := Context{rw: &responseWriter{}}
