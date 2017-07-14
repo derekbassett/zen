@@ -34,8 +34,8 @@ type (
 		http.Server
 		// Router
 		Router
-
-		filters Handlers
+		// global middleware
+		interceptors Handlers
 
 		trees []*methodTree
 

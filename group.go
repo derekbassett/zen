@@ -3,17 +3,17 @@ package zen
 import "path"
 
 type group struct {
-	base    string
-	filters Handlers
-	server  *Server
+	base         string
+	interceptors Handlers
+	server       *Server
 }
 
-// Group create a group router with base url and shared filter
-func (s *Server) Group(base string, filters ...HandlerFunc) Router {
+// Group create a group router with base url and shared interceptors
+func (s *Server) Group(base string, interceptors ...HandlerFunc) Router {
 	return &group{
-		base:    base,
-		filters: filters,
-		server:  s,
+		base:         base,
+		interceptors: interceptors,
+		server:       s,
 	}
 }
 
@@ -83,9 +83,9 @@ func (g *group) Any(path string, handler HandlerFunc) {
 	g.Route(TRACE, path, handler)
 }
 
-// Filter add a filter in group
-func (g *group) Filter(handler HandlerFunc) {
-	g.filters = append(g.filters, handler)
+// AddInterceptor add a interceptor in group
+func (g *group) AddInterceptor(interceptor HandlerFunc) {
+	g.interceptors = append(g.interceptors, interceptor)
 }
 
 func joinPath(base, sub string) string {
@@ -96,6 +96,6 @@ func joinPath(base, sub string) string {
 	return ret
 }
 
-func (g *group) combineHandlers(handler HandlerFunc) Handlers {
-	return append(g.filters, handler)
+func (g *group) combineHandlers(interceptor HandlerFunc) Handlers {
+	return append(g.interceptors, interceptor)
 }

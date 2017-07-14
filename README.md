@@ -70,8 +70,8 @@ func main() {
 
 ```go
     server := zen.New()
-    server.Filter(func(c *zen.Context) {
-        log.Println("root filter")
+    server.AddInterceptor(func(c *zen.Context) {
+        log.Println("root middleware")
     })
 ```
 
@@ -82,8 +82,8 @@ func main() {
 
     user := server.Group("/user")
     {
-        user.Filter(func(c *zen.Context) {
-        log.Println("user filter")
+        user.AddInterceptor(func(c *zen.Context) {
+        log.Println("user middleware")
         })
     }
 ```

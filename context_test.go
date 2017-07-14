@@ -16,7 +16,7 @@ func TestServer_getContext(t *testing.T) {
 	type fields struct {
 		notFoundHandler HandlerFunc
 		panicHandler    PanicHandler
-		filters         []HandlerFunc
+		interceptors    []HandlerFunc
 		contextPool     *sync.Pool
 	}
 	type args struct {

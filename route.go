@@ -42,21 +42,21 @@ func (s *Server) methodRouteTree(method string) *node {
 }
 
 // Route set handler for given pattern and method
-func (s *Server) route(method string, path string, handlers Handlers) {
+func (s *Server) route(method string, path string, interceptors Handlers) {
 	assert(path[0] == '/', "path must begin with '/'")
 	assert(len(method) > 0, "HTTP method can not be empty")
-	assert(handlers != nil && len(handlers) > 0, "handler cannot be nil")
-	h := make(Handlers, len(s.filters)+len(handlers))
+	assert(interceptors != nil && len(interceptors) > 0, "handler cannot be nil")
+	h := make(Handlers, len(s.interceptors)+len(interceptors))
 	c := 0
-	c += copy(h[c:], s.filters)
-	c += copy(h[c:], handlers)
+	c += copy(h[c:], s.interceptors)
+	c += copy(h[c:], interceptors)
 	root := s.methodRouteTree(method)
 	root.addRoute(path, h)
 }
 
-// Filter add a global filter
-func (s *Server) Filter(handler HandlerFunc) {
-	s.Router.Filter(handler)
+// AddInterceptor add a global interceptor
+func (s *Server) AddInterceptor(handler HandlerFunc) {
+	s.Router.AddInterceptor(handler)
 }
 
 // Static :Adds a new Route for Static http requests. Serves

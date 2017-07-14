@@ -35,6 +35,6 @@ type Router interface {
 	// Any adds new Route for ALL method requests.
 	Any(path string, handler HandlerFunc)
 
-	// Filter add a filter for given path
-	Filter(handler HandlerFunc)
+	// AddInterceptor add a interceptor for given path
+	AddInterceptor(handler HandlerFunc)
 }
