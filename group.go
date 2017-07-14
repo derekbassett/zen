@@ -72,15 +72,15 @@ func (g *group) Trace(path string, handler HandlerFunc) {
 
 // Any adds new route for ALL method requests.
 func (g *group) Any(path string, handler HandlerFunc) {
-	g.Route("GET", path, handler)
-	g.Route("POST", path, handler)
-	g.Route("PUT", path, handler)
-	g.Route("PATCH", path, handler)
-	g.Route("HEAD", path, handler)
-	g.Route("OPTIONS", path, handler)
-	g.Route("DELETE", path, handler)
-	g.Route("CONNECT", path, handler)
-	g.Route("TRACE", path, handler)
+	g.Route(GET, path, handler)
+	g.Route(POST, path, handler)
+	g.Route(PUT, path, handler)
+	g.Route(PATCH, path, handler)
+	g.Route(HEAD, path, handler)
+	g.Route(OPTIONS, path, handler)
+	g.Route(DELETE, path, handler)
+	g.Route(CONNECT, path, handler)
+	g.Route(TRACE, path, handler)
 }
 
 // Filter add a filter in group

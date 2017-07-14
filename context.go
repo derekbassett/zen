@@ -1,6 +1,7 @@
 package zen
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 const (
@@ -65,13 +67,15 @@ type (
 		rw     *responseWriter
 		params Params
 		parsed bool
+		context.Context
 	}
 )
 
 func (s *Server) getContext(rw http.ResponseWriter, req *http.Request) *Context {
-	c := s.contextPool.Get().(*Context)
+	c := contextPool.Get().(*Context)
 	c.Req = req
 	c.rw.writer = rw
+	c.Context = context.TODO()
 	return c
 }
 
@@ -80,14 +84,35 @@ func (s *Server) putBackContext(c *Context) {
 	c.parsed = false
 	c.Req = nil
 	c.rw.writer = nil
-
-	s.contextPool.Put(c)
+	c.Context = nil
+	contextPool.Put(c)
 }
 
 // parseInput will parse request's form and
 func (c *Context) parseInput() error {
 	c.parsed = true
 	return c.Req.ParseForm()
+}
+
+// Dup make a duplicate Context with context.Context
+func (c *Context) Dup(ctx context.Context) *Context {
+	ret := new(Context)
+	ret.Req = c.Req
+	ret.rw = c.rw
+	ret.Context = ctx
+	return ret
+}
+
+// WithDeadline ...
+func (c *Context) WithDeadline(dead time.Time) (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithDeadline(c.Context, dead)
+	return c.Dup(ctx), cancel
+}
+
+// WithCancel ...
+func (c *Context) WithCancel() (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(c.Context)
+	return c.Dup(ctx), cancel
 }
 
 // Form return request form value with given key

@@ -29,17 +29,7 @@ func TestServer_getContext(t *testing.T) {
 		wantNil bool
 	}{
 		{"case1",
-			fields{
-				contextPool: &sync.Pool{
-					New: func() interface{} {
-						c := Context{
-							params: Params{},
-							rw:     &responseWriter{},
-						}
-						return &c
-					},
-				},
-			},
+			fields{},
 			args{
 				nil, nil,
 			},
@@ -51,7 +41,6 @@ func TestServer_getContext(t *testing.T) {
 			s := &Server{
 				notFoundHandler: tt.fields.notFoundHandler,
 				panicHandler:    tt.fields.panicHandler,
-				contextPool:     *tt.fields.contextPool,
 			}
 			if got := s.getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
 				t.Errorf("Server.getContext() = %v, want nil? %v", got, tt.wantNil)
@@ -63,18 +52,7 @@ func TestServer_getContext(t *testing.T) {
 }
 
 func BenchmarkGetContext(b *testing.B) {
-	s := &Server{
-
-		contextPool: sync.Pool{
-			New: func() interface{} {
-				c := Context{
-					params: Params{},
-					rw:     &responseWriter{},
-				}
-				return &c
-			},
-		},
-	}
+	s := &Server{}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		c := s.getContext(nil, nil)

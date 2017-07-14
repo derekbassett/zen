@@ -15,6 +15,14 @@ const (
 // ensure Server implement http.Handler
 var _ http.Handler = new(Server)
 
+// global contextPool reuse context
+var contextPool = &sync.Pool{
+	New: func() interface{} {
+		c := Context{rw: &responseWriter{}}
+		return &c
+	},
+}
+
 type (
 	methodTree struct {
 		method string
@@ -66,9 +74,6 @@ type (
 		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
 
-		// contextPool reuse context
-		contextPool sync.Pool
-
 		// timeout config
 		ReadTimeout       time.Duration
 		WriteTimeout      time.Duration
@@ -82,7 +87,6 @@ type (
 // New will create a Server instance and return a pointer which point to it
 func New() *Server {
 	s := &Server{
-		contextPool:            sync.Pool{},
 		RedirectTrailingSlash:  true,
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
@@ -90,11 +94,6 @@ func New() *Server {
 	}
 
 	s.Router = s.Group("")
-
-	s.contextPool.New = func() interface{} {
-		c := Context{rw: &responseWriter{}}
-		return &c
-	}
 
 	return s
 }
@@ -176,7 +175,6 @@ func (s *Server) handleHTTPRequest(c *Context) {
 		if t.method == httpMethod {
 			if handlers, params, tsr := t.node.getValue(path); handlers != nil {
 				c.params = params
-
 				for _, h := range handlers {
 					h(c)
 					if c.rw.written {
