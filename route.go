@@ -84,7 +84,6 @@ func (s *Server) HandlePanic(handler PanicHandler) {
 
 // handlePanic call server's panic handler
 func (s *Server) handlePanic(c *Context) {
-
 	if err := recover(); err != nil {
 		if s.panicHandler != nil {
 			s.panicHandler(c, err)
@@ -96,7 +95,6 @@ func (s *Server) handlePanic(c *Context) {
 
 // handleNotFound call server's not found handler
 func (s *Server) handleNotFound(c *Context) {
-
 	if s.notFoundHandler != nil {
 		s.notFoundHandler(c)
 		return
