@@ -38,7 +38,7 @@ type (
 		Router
 		// global middleware
 		interceptors Handlers
-
+		// tier tree store all handlers
 		trees []*methodTree
 
 		// Enables automatic redirection if the current route can't be matched but a
@@ -71,20 +71,18 @@ type (
 		// Custom OPTIONS handlers take priority over automatic replies.
 		HandleOPTIONS bool
 
+		// timeout config
+		ReadTimeout       time.Duration
+		WriteTimeout      time.Duration
+		ReadHeaderTimeout time.Duration
+		ShutdownDuration  time.Duration
+
 		// notFoundHandler handle 404
 		notFoundHandler HandlerFunc
 		// panicHandler handle internal panic
 		panicHandler PanicHandler
 		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
-
-		// timeout config
-		ReadTimeout       time.Duration
-		WriteTimeout      time.Duration
-		ReadHeaderTimeout time.Duration
-		ShutdownDuration  time.Duration
-		// debug indicate print debug info
-		debug bool
 	}
 )
 
