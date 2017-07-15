@@ -32,8 +32,8 @@ type (
 	Server struct {
 
 		// internal http server
-		sync.Once
-		Server http.Server
+		once   sync.Once
+		server http.Server
 		// Router
 		Router
 		// global middleware
@@ -253,9 +253,9 @@ func (s *Server) handleHTTPRequest(c *Context) {
 // Run server on addr
 func (s *Server) Run(addr string) error {
 	var err error
-	once(&s.Once, func() {
-		s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
-		err = s.Server.ListenAndServe()
+	once(&s.once, func() {
+		s.server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
+		err = s.server.ListenAndServe()
 	})
 	return err
 }
@@ -263,9 +263,9 @@ func (s *Server) Run(addr string) error {
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
 	var err error
-	once(&s.Once, func() {
-		s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
-		err = s.Server.ListenAndServeTLS(certFile, keyFile)
+	once(&s.once, func() {
+		s.server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
+		err = s.server.ListenAndServeTLS(certFile, keyFile)
 	})
 	return err
 }
@@ -276,12 +276,12 @@ func (s *Server) Shutdown() error {
 	if s.ShutdownDuration > 0 {
 		ctx, _ = ctx.WithDeadline(time.Now().Add(s.ShutdownDuration))
 	}
-	return s.Server.Shutdown(ctx)
+	return s.server.Shutdown(ctx)
 }
 
 // Close shutdown server forcibly
 func (s *Server) Close() error {
-	return s.Server.Close()
+	return s.server.Close()
 }
 
 func once(once *sync.Once, closure func()) {
