@@ -151,8 +151,10 @@ func handler(c *zen.Context) {
 ```go
     server := zen.New()
     server.HandleNotFound(func(c *zen.Context) {
+        ctx, cancel := c.WithDeadline(time.Now().Add(time.Second) * 3)
+        defer cancel()
         db, _ := sql.Open("mysql", "dsn")
-        db.QueryContext(c, "SELECT * FROM table;")
+        db.QueryContext(ctx, "SELECT * FROM table;")
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)
