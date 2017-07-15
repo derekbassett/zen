@@ -28,6 +28,9 @@ type (
 		node   *node
 	}
 
+	// StatsHandler used to handle req statistic
+	StatsHandler func(path string, begin time.Time, eng time.Time)
+
 	// Server struct
 	Server struct {
 
@@ -83,6 +86,8 @@ type (
 		panicHandler PanicHandler
 		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
+		// StatsHandler handle every single request
+		StatsHandler StatsHandler
 	}
 )
 
@@ -156,9 +161,15 @@ func (s *Server) allowed(path, reqMethod string) (allow string) {
 // Required by http.Handler interface. This method is invoked by the
 // http server and will handle all page routing
 func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	begin := time.Now()
+	defer func() {
+		end := time.Now()
+		if s.StatsHandler != nil {
+			s.StatsHandler(r.RequestURI, begin, end)
+		}
+	}()
 	// get context instance from pool
 	c := s.getContext(rw, r)
-
 	s.handleHTTPRequest(c)
 
 	// put context back into pool
