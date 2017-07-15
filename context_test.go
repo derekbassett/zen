@@ -1,7 +1,6 @@
 package zen
 
 import (
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -32,33 +31,28 @@ func TestServer_getContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Server{}
-			if got := s.getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
+			server := New()
+			if got := server.getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
 				t.Errorf("Server.getContext() = %v, want nil? %v", got, tt.wantNil)
 			} else {
-				s.putBackContext(got)
+				server.putBackContext(got)
 			}
 		})
 	}
 }
 
 func BenchmarkGetContext(b *testing.B) {
-	s := &Server{}
+	server := New()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		c := s.getContext(nil, nil)
-		s.putBackContext(c)
+		c := server.getContext(nil, nil)
+		server.putBackContext(c)
 	}
 }
 
-func mustNewRequest(method string, urlStr string, body io.Reader) *http.Request {
-	ret, _ := http.NewRequest(method, urlStr, body)
-	return ret
-}
-
 func TestContextCancel(t *testing.T) {
-	s := &Server{}
-	ctx := s.getContext(nil, nil)
+	server := New()
+	ctx := server.getContext(nil, nil)
 	ctx, cancel := ctx.WithCancel()
 	cancel()
 	if err := ctx.Err(); err == nil {
@@ -67,8 +61,8 @@ func TestContextCancel(t *testing.T) {
 }
 
 func TestWithDeadline(t *testing.T) {
-	s := &Server{}
-	ctx := s.getContext(nil, nil)
+	server := New()
+	ctx := server.getContext(nil, nil)
 	ctx, _ = ctx.WithDeadline(time.Now())
 	if err := ctx.Err(); err == nil {
 		t.Error("ctx.Err() want err got nil")
@@ -89,7 +83,7 @@ func TestContext_parseInput(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				nil,
 				false,
@@ -130,7 +124,7 @@ func TestContext_Form(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET?name=zen", nil),
+				httptest.NewRequest("GET", "/GET?name=zen", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				nil,
 				false,
@@ -140,7 +134,7 @@ func TestContext_Form(t *testing.T) {
 		},
 		{"case2",
 			fields{
-				mustNewRequest("GET", "/GET?name=zen", nil),
+				httptest.NewRequest("GET", "/GET?name=zen", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				nil,
 				false,
@@ -182,7 +176,7 @@ func TestContext_Param(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET?name=zen", nil),
+				httptest.NewRequest("GET", "/GET?name=zen", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
@@ -192,7 +186,7 @@ func TestContext_Param(t *testing.T) {
 		},
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET?name=zen", nil),
+				httptest.NewRequest("GET", "/GET?name=zen", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
@@ -235,7 +229,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET?email=golang@gmail.com", nil),
+				httptest.NewRequest("GET", "/GET?email=golang@gmail.com", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
@@ -250,7 +244,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 
 		{"case2",
 			fields{
-				mustNewRequest("GET", "/GET?name=zen", nil),
+				httptest.NewRequest("GET", "/GET?name=zen", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
@@ -265,7 +259,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 
 		{"case3",
 			fields{
-				mustNewRequest("GET", "/GET?name=zen", nil),
+				httptest.NewRequest("GET", "/GET?name=zen", nil),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
@@ -300,7 +294,7 @@ func BenchmarkContext_ParseValidateForm(b *testing.B) {
 		Age   int
 	}
 
-	req := mustNewRequest("GET", "/GET?name=zen&age=22&email=zgrubby@gmail.com", nil)
+	req := httptest.NewRequest("GET", "/GET?name=zen&age=22&email=zgrubby@gmail.com", nil)
 	c := &Context{
 		Req:    req,
 		rw:     &responseWriter{writer: httptest.NewRecorder(), written: false},
@@ -332,7 +326,7 @@ func TestContext_BindJSON(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader(`{"name":"zen"}`)),
+				httptest.NewRequest("GET", "/GET", strings.NewReader(`{"name":"zen"}`)),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
@@ -347,7 +341,7 @@ func TestContext_BindJSON(t *testing.T) {
 
 		{"case2",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
+				httptest.NewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
@@ -393,7 +387,7 @@ func TestContext_BindXML(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader(`<x><name>hello</name></x>`)),
+				httptest.NewRequest("GET", "/GET", strings.NewReader(`<x><name>hello</name></x>`)),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
@@ -408,7 +402,7 @@ func TestContext_BindXML(t *testing.T) {
 
 		{"case2",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
+				httptest.NewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
 				&responseWriter{writer: httptest.NewRecorder(), written: false},
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
@@ -623,7 +617,7 @@ func TestContext_JSON(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				nil,
 				false,
 			},
@@ -677,7 +671,7 @@ func TestContext_XML(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				nil,
 				false,
 			},
@@ -724,7 +718,7 @@ func TestContext_WriteStatus(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				nil,
 				false,
 			},
@@ -734,7 +728,7 @@ func TestContext_WriteStatus(t *testing.T) {
 		},
 		{"case2",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				nil,
 				false,
 			},
@@ -776,7 +770,7 @@ func TestContext_RawStr(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				nil,
 				false,
 			},
@@ -820,7 +814,7 @@ func TestContext_Data(t *testing.T) {
 	}{
 		{"case1",
 			fields{
-				mustNewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
+				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
 				nil,
 				false,
 			},
@@ -862,7 +856,7 @@ func TestContext_File(t *testing.T) {
 	server.Get("/file", func(c *Context) {
 		c.WriteFile(f.Name())
 	})
-	req := mustNewRequest("GET", "/file", nil)
+	req := httptest.NewRequest("GET", "/file", nil)
 	rw := httptest.NewRecorder()
 
 	server.ServeHTTP(rw, req)

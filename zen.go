@@ -30,8 +30,10 @@ type (
 
 	// Server struct
 	Server struct {
+
 		// internal http server
-		http.Server
+		sync.Once
+		Server http.Server
 		// Router
 		Router
 		// global middleware
@@ -250,21 +252,38 @@ func (s *Server) handleHTTPRequest(c *Context) {
 
 // Run server on addr
 func (s *Server) Run(addr string) error {
-	s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
-	return s.ListenAndServe()
+	var err error
+	once(&s.Once, func() {
+		s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
+		err = s.Server.ListenAndServe()
+	})
+	return err
 }
 
 // RunTLS Run server on addr with tls
 func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
-	s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
-	return s.ListenAndServeTLS(certFile, keyFile)
+	var err error
+	once(&s.Once, func() {
+		s.Server = http.Server{Handler: s, Addr: addr, ReadTimeout: s.ReadTimeout, ReadHeaderTimeout: s.ReadHeaderTimeout, WriteTimeout: s.WriteTimeout}
+		err = s.Server.ListenAndServeTLS(certFile, keyFile)
+	})
+	return err
 }
 
-// Shutdown with deadline
+// Shutdown gracefully with deadline
 func (s *Server) Shutdown() error {
 	ctx := s.getContext(nil, nil)
 	if s.ShutdownDuration > 0 {
 		ctx, _ = ctx.WithDeadline(time.Now().Add(s.ShutdownDuration))
 	}
 	return s.Server.Shutdown(ctx)
+}
+
+// Close shutdown server forcibly
+func (s *Server) Close() error {
+	return s.Server.Close()
+}
+
+func once(once *sync.Once, closure func()) {
+	once.Do(closure)
 }
