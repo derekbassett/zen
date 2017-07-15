@@ -396,7 +396,7 @@ func TestRouterNotAllowed(t *testing.T) {
 	// test custom handler
 	w = httptest.NewRecorder()
 	responseText := "custom method"
-	router.HandleNotAllowed(wrapF(func(w http.ResponseWriter, req *http.Request) {
+	router.HandleNotAllowed(WrapF(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte(responseText))
 	}))
@@ -446,7 +446,7 @@ func TestRouterNotFound(t *testing.T) {
 
 	// Test custom not found handler
 	var notFound bool
-	router.HandleNotFound(wrapF(func(rw http.ResponseWriter, r *http.Request) {
+	router.HandleNotFound(WrapF(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(404)
 		notFound = true
 	}))

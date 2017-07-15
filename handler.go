@@ -13,8 +13,8 @@ type (
 	PanicHandler func(*Context, interface{})
 )
 
-// wrapF wrap a http handlerfunc into HandlerFunc
-func wrapF(h http.HandlerFunc) HandlerFunc {
+// WrapF wrap a http handlerfunc into HandlerFunc
+func WrapF(h http.HandlerFunc) HandlerFunc {
 	return func(c *Context) {
 		h(c.rw, c.Req)
 	}
