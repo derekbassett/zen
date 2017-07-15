@@ -159,6 +159,18 @@ func handler(c *zen.Context) {
     }
 ```
 
+### Standard http.HandleFunc support
+
+```go
+    server := zen.New()
+    server.Get("/user/:uid",zen.WrapF(func(rw http.ResponseWriter, req *http.Request) {
+
+    }))
+    if err := server.Run(":8080"); err != nil {
+    log.Println(err)
+    }
+```
+
 ### Shutdown
 
 ```go
