@@ -173,11 +173,19 @@ func handler(c *zen.Context) {
     }
 ```
 
-### Shutdown
+### Graceful shutdown
 
 ```go
     server := zen.New()
+    server.ShutdownDuration = time.Second * 10
     server.Shutdown()
+```
+
+### Force close
+
+```go
+    server := zen.New()
+    server.Close()
 ```
 
 ## License
