@@ -12,7 +12,7 @@ const (
 )
 
 // ensure Server implement http.Handler
-var _ http.Handler = new(Server)
+var _ http.Handler = (*Server)(nil)
 
 // global contextPool to reuse context
 var contextPool = &sync.Pool{
@@ -29,7 +29,7 @@ type (
 	}
 
 	// StatsHandler used to handle req statistic
-	StatsHandler func(path string, begin time.Time, eng time.Time)
+	StatsHandler func(path string, begin time.Time, end time.Time)
 
 	// Server struct
 	Server struct {
