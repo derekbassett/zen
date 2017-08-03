@@ -1,6 +1,8 @@
 package zen
 
 import (
+	"context"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -866,5 +868,81 @@ func TestContext_File(t *testing.T) {
 	}
 	if rw.Body.String() != "zen" {
 		t.Errorf("Context.File get body %s want %s", rw.Body.String(), "zen")
+	}
+}
+
+func TestContext_Do(t *testing.T) {
+	type fields struct {
+		Context context.Context
+	}
+	type args struct {
+		job func() error
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "case1",
+			fields: fields{
+				Context: func() context.Context {
+					ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
+					_ = cancel
+					return ctx
+				}(),
+			},
+			args: args{
+				job: func() error {
+					time.Sleep(time.Millisecond * 20)
+					return nil
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "case2",
+			fields: fields{
+				Context: func() context.Context {
+					ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1000)
+					_ = cancel
+					return ctx
+				}(),
+			},
+			args: args{
+				job: func() error {
+					return errors.New("fake")
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "case3",
+			fields: fields{
+				Context: func() context.Context {
+					ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1000)
+					_ = cancel
+					return ctx
+				}(),
+			},
+			args: args{
+				job: func() error {
+					return nil
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Context{
+				Context: tt.fields.Context,
+			}
+			if err := c.Do(tt.args.job); (err != nil) != tt.wantErr {
+				t.Errorf("Context.Do() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }

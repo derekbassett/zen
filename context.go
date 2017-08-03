@@ -118,6 +118,28 @@ func (c *Context) WithCancel() (*Context, context.CancelFunc) {
 	return c.Dup(ctx), cancel
 }
 
+// Do job with context
+func (c *Context) Do(job func() error) error {
+	errChan := make(chan error)
+	done := make(chan struct{})
+	go func() {
+		if err := job(); err != nil {
+			errChan <- err
+			return
+		}
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-c.Done():
+		return c.Err()
+	case err := <-errChan:
+		return err
+	case <-done:
+		return nil
+	}
+}
+
 // Form return request form value with given key
 func (c *Context) Form(key string) string {
 	if !c.parsed {
