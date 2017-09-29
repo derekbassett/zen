@@ -53,11 +53,11 @@ func TestRouter(t *testing.T) {
 	router := New()
 
 	routed := false
-	router.Route("GET", "/user/:name", func(c *Context) {
+	router.Route("GET", "/user/:name", func(ctx *Context) {
 		routed = true
 		want := Params{Param{"name", "gopher"}}
-		if !reflect.DeepEqual(c.params, want) {
-			t.Fatalf("wrong wildcard values: want %v, got %v", want, c.params)
+		if !reflect.DeepEqual(ctx.params, want) {
+			t.Fatalf("wrong wildcard values: want %v, got %v", want, ctx.params)
 		}
 	})
 
@@ -75,37 +75,37 @@ func TestRouterAPI(t *testing.T) {
 	var interceptor, get, head, options, post, put, patch, delete, connect, trace, handlerFunc bool
 
 	router := New()
-	router.AddInterceptor(func(c *Context) {
+	router.AddInterceptor(func(ctx *Context) {
 		interceptor = true
 	})
-	router.Get("/GET", func(c *Context) {
+	router.Get("/GET", func(ctx *Context) {
 		get = true
 	})
-	router.Head("/GET", func(c *Context) {
+	router.Head("/GET", func(ctx *Context) {
 		head = true
 	})
-	router.Options("/GET", func(c *Context) {
+	router.Options("/GET", func(ctx *Context) {
 		options = true
 	})
-	router.Post("/POST", func(c *Context) {
+	router.Post("/POST", func(ctx *Context) {
 		post = true
 	})
-	router.Put("/PUT", func(c *Context) {
+	router.Put("/PUT", func(ctx *Context) {
 		put = true
 	})
-	router.Patch("/PATCH", func(c *Context) {
+	router.Patch("/PATCH", func(ctx *Context) {
 		patch = true
 	})
-	router.Delete("/DELETE", func(c *Context) {
+	router.Delete("/DELETE", func(ctx *Context) {
 		delete = true
 	})
-	router.Connect("/CONNECT", func(c *Context) {
+	router.Connect("/CONNECT", func(ctx *Context) {
 		connect = true
 	})
-	router.Trace("/TRACE", func(c *Context) {
+	router.Trace("/TRACE", func(ctx *Context) {
 		trace = true
 	})
-	router.Route("GET", "/HandlerFunc", func(c *Context) {
+	router.Route("GET", "/HandlerFunc", func(ctx *Context) {
 		handlerFunc = true
 	})
 
@@ -176,11 +176,11 @@ func TestRouterAPIAny(t *testing.T) {
 	var interceptor, get, head, options, post, put, patch, delete, connect, trace bool
 
 	router := New()
-	router.AddInterceptor(func(c *Context) {
+	router.AddInterceptor(func(ctx *Context) {
 		interceptor = true
 	})
-	router.Any("/ANY", func(c *Context) {
-		switch c.Req.Method {
+	router.Any("/ANY", func(ctx *Context) {
+		switch ctx.Req.Method {
 		case GET:
 			get = true
 		case HEAD:
@@ -274,7 +274,7 @@ func TestRouterRoot(t *testing.T) {
 }
 
 func TestRouterOPTIONS(t *testing.T) {
-	handlerFunc := func(c *Context) {}
+	handlerFunc := func(ctx *Context) {}
 
 	router := New()
 	router.Post("/path", handlerFunc)
@@ -333,7 +333,7 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// custom handler
 	var custom bool
-	router.Options("/path", func(c *Context) {
+	router.Options("/path", func(ctx *Context) {
 		custom = true
 	})
 
@@ -364,7 +364,7 @@ func TestRouterOPTIONS(t *testing.T) {
 }
 
 func TestRouterNotAllowed(t *testing.T) {
-	handlerFunc := func(c *Context) {}
+	handlerFunc := func(ctx *Context) {}
 
 	router := New()
 	router.Post("/path", handlerFunc)
@@ -413,7 +413,7 @@ func TestRouterNotAllowed(t *testing.T) {
 }
 
 func TestRouterNotFound(t *testing.T) {
-	handlerFunc := func(c *Context) {}
+	handlerFunc := func(ctx *Context) {}
 
 	router := New()
 	router.Get("/path", handlerFunc)
@@ -481,11 +481,11 @@ func TestRouterPanicHandler(t *testing.T) {
 	router := New()
 	panicHandled := false
 
-	router.HandlePanic(func(c *Context, _ interface{}) {
+	router.HandlePanic(func(ctx *Context, _ interface{}) {
 		panicHandled = true
 	})
 
-	router.Route("PUT", "/user/:name", func(c *Context) {
+	router.Route("PUT", "/user/:name", func(ctx *Context) {
 		panic("oops!")
 	})
 
@@ -502,7 +502,7 @@ func TestRouterPanicHandler(t *testing.T) {
 func TestRouterDefaultPanicHandler(t *testing.T) {
 	router := New()
 
-	router.Route("PUT", "/user/:name", func(c *Context) {
+	router.Route("PUT", "/user/:name", func(ctx *Context) {
 		panic("oops!")
 	})
 
@@ -518,7 +518,7 @@ func TestRouterDefaultPanicHandler(t *testing.T) {
 
 func TestRouterLookup(t *testing.T) {
 	routed := false
-	wantHandle := func(c *Context) {
+	wantHandle := func(ctx *Context) {
 		routed = true
 	}
 	wantParams := Params{Param{"name", "gopher"}}

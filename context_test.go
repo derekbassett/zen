@@ -856,8 +856,8 @@ func TestContext_File(t *testing.T) {
 	f.Close()
 
 	server := New()
-	server.Get("/file", func(c *Context) {
-		c.WriteFile(f.Name())
+	server.Get("/file", func(ctx *Context) {
+		ctx.WriteFile(f.Name())
 	})
 	req := httptest.NewRequest("GET", "/file", nil)
 	rw := httptest.NewRecorder()

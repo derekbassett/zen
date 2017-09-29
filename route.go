@@ -62,8 +62,8 @@ func (s *Server) AddInterceptor(handler HandlerFunc) {
 // Static :Adds a new Route for Static http requests. Serves
 // static files from the specified directory
 func (s *Server) Static(staticpath string, dir string) {
-	s.Route(GET, path.Join(staticpath, "/*filepath"), func(c *Context) {
-		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(c.rw, c.Req)
+	s.Route(GET, path.Join(staticpath, "/*filepath"), func(ctx *Context) {
+		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(ctx.rw, ctx.Req)
 	})
 }
 
@@ -83,23 +83,23 @@ func (s *Server) HandlePanic(handler PanicHandler) {
 }
 
 // handlePanic call server's panic handler
-func (s *Server) handlePanic(c *Context) {
+func (s *Server) handlePanic(ctx *Context) {
 	if err := recover(); err != nil {
 		if s.panicHandler != nil {
-			s.panicHandler(c, err)
+			s.panicHandler(ctx, err)
 		} else {
-			c.LogError(err)
-			http.Error(c.rw, StatusText(StatusInternalServerError), StatusInternalServerError)
+			ctx.LogError(err)
+			http.Error(ctx.rw, StatusText(StatusInternalServerError), StatusInternalServerError)
 		}
 	}
 }
 
 // handleNotFound call server's not found handler
-func (s *Server) handleNotFound(c *Context) {
+func (s *Server) handleNotFound(ctx *Context) {
 	if s.notFoundHandler != nil {
-		s.notFoundHandler(c)
+		s.notFoundHandler(ctx)
 		return
 	}
 
-	http.NotFound(c.rw, c.Req)
+	http.NotFound(ctx.rw, ctx.Req)
 }

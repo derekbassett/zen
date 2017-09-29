@@ -84,47 +84,47 @@ func (s *Server) getContext(rw http.ResponseWriter, req *http.Request) *Context 
 	return c
 }
 
-func (s *Server) putBackContext(c *Context) {
-	c.params = c.params[0:0]
-	c.parsed = false
-	c.rw.written = false
-	c.Req = nil
-	c.rw.writer = nil
-	c.Context = nil
-	contextPool.Put(c)
+func (s *Server) putBackContext(ctx *Context) {
+	ctx.params = ctx.params[0:0]
+	ctx.parsed = false
+	ctx.rw.written = false
+	ctx.Req = nil
+	ctx.rw.writer = nil
+	ctx.Context = nil
+	contextPool.Put(ctx)
 }
 
 // parseInput will parse request's form and
-func (c *Context) parseInput() error {
-	c.parsed = true
-	return c.Req.ParseForm()
+func (ctx *Context) parseInput() error {
+	ctx.parsed = true
+	return ctx.Req.ParseForm()
 }
 
 // Dup make a duplicate Context with context.Context
-func (c *Context) Dup(ctx context.Context) *Context {
+func (ctx *Context) Dup(c context.Context) *Context {
 	ret := new(Context)
-	ret.Req = c.Req
-	ret.rw = c.rw
-	ret.Context = ctx
-	ret.parsed = c.parsed
-	ret.params = c.params
+	ret.Req = ctx.Req
+	ret.rw = ctx.rw
+	ret.Context = c
+	ret.parsed = ctx.parsed
+	ret.params = ctx.params
 	return ret
 }
 
 // WithDeadline ...
-func (c *Context) WithDeadline(dead time.Time) (*Context, context.CancelFunc) {
-	ctx, cancel := context.WithDeadline(c, dead)
-	return c.Dup(ctx), cancel
+func (ctx *Context) WithDeadline(dead time.Time) (*Context, context.CancelFunc) {
+	c, cancel := context.WithDeadline(ctx, dead)
+	return ctx.Dup(c), cancel
 }
 
 // WithCancel ...
-func (c *Context) WithCancel() (*Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(c)
-	return c.Dup(ctx), cancel
+func (ctx *Context) WithCancel() (*Context, context.CancelFunc) {
+	c, cancel := context.WithCancel(ctx)
+	return ctx.Dup(c), cancel
 }
 
 // Do job with context
-func (c *Context) Do(job func() error) error {
+func (ctx *Context) Do(job func() error) error {
 	errChan := make(chan error)
 	done := make(chan struct{})
 	go func() {
@@ -136,8 +136,8 @@ func (c *Context) Do(job func() error) error {
 	}()
 
 	select {
-	case <-c.Done():
-		return c.Err()
+	case <-ctx.Done():
+		return ctx.Err()
 	case err := <-errChan:
 		return err
 	case <-done:
@@ -146,43 +146,43 @@ func (c *Context) Do(job func() error) error {
 }
 
 // Form return request form value with given key
-func (c *Context) Form(key string) string {
-	if !c.parsed {
-		c.parseInput()
+func (ctx *Context) Form(key string) string {
+	if !ctx.parsed {
+		ctx.parseInput()
 	}
-	return c.Req.FormValue(key)
+	return ctx.Req.FormValue(key)
 }
 
 // Param return url param with given key
-func (c *Context) Param(key string) string {
-	return c.params.ByName(key)
+func (ctx *Context) Param(key string) string {
+	return ctx.params.ByName(key)
 }
 
 // ParseValidateForm will parse request's form and map into a interface{} value
-func (c *Context) ParseValidateForm(input interface{}) error {
-	if !c.parsed {
-		c.parseInput()
+func (ctx *Context) ParseValidateForm(input interface{}) error {
+	if !ctx.parsed {
+		ctx.parseInput()
 	}
-	return c.parseValidateForm(input)
+	return ctx.parseValidateForm(input)
 }
 
 // BindJSON will parse request's json body and map into a interface{} value
-func (c *Context) BindJSON(input interface{}) error {
-	if err := json.NewDecoder(c.Req.Body).Decode(input); err != nil {
+func (ctx *Context) BindJSON(input interface{}) error {
+	if err := json.NewDecoder(ctx.Req.Body).Decode(input); err != nil {
 		return err
 	}
 	return nil
 }
 
 // BindXML will parse request's xml body and map into a interface{} value
-func (c *Context) BindXML(input interface{}) error {
-	if err := xml.NewDecoder(c.Req.Body).Decode(input); err != nil {
+func (ctx *Context) BindXML(input interface{}) error {
+	if err := xml.NewDecoder(ctx.Req.Body).Decode(input); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Context) parseValidateForm(input interface{}) error {
+func (ctx *Context) parseValidateForm(input interface{}) error {
 	inputValue := reflect.ValueOf(input).Elem()
 	inputType := inputValue.Type()
 
@@ -192,7 +192,7 @@ func (c *Context) parseValidateForm(input interface{}) error {
 		validate := tag.Get(validTagName)
 		validateMsg := tag.Get(validMsgName)
 		field := inputValue.Field(i)
-		formValue := c.Req.Form.Get(formName)
+		formValue := ctx.Req.Form.Get(formName)
 
 		// scan form string value into field
 		if err := scan(field, formValue); err != nil {
@@ -266,96 +266,96 @@ func valid(s string, validate, msg string) error {
 }
 
 // JSON : write json data to http response writer, with status code 200
-func (c *Context) JSON(i interface{}) (err error) {
+func (ctx *Context) JSON(i interface{}) (err error) {
 	// write http status code
-	c.WriteHeader(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
+	ctx.WriteHeader(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 
 	// Encode json data to rw
-	return json.NewEncoder(c.rw).Encode(i)
+	return json.NewEncoder(ctx.rw).Encode(i)
 }
 
 // XML : write xml data to http response writer, with status code 200
-func (c *Context) XML(i interface{}) (err error) {
+func (ctx *Context) XML(i interface{}) (err error) {
 	// write http status code
-	c.WriteHeader(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
+	ctx.WriteHeader(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
 
 	// Encode xml data to rw
-	return xml.NewEncoder(c.rw).Encode(i)
+	return xml.NewEncoder(ctx.rw).Encode(i)
 }
 
 // WriteStatus set response's status code
-func (c *Context) WriteStatus(code int) {
-	c.rw.WriteHeader(code)
+func (ctx *Context) WriteStatus(code int) {
+	ctx.rw.WriteHeader(code)
 }
 
 // WriteHeader set response header
-func (c *Context) WriteHeader(k, v string) {
-	c.rw.Header().Add(k, v)
+func (ctx *Context) WriteHeader(k, v string) {
+	ctx.rw.Header().Add(k, v)
 }
 
 // WriteString write raw string
-func (c *Context) WriteString(s string) {
-	io.WriteString(c.rw, s)
+func (ctx *Context) WriteString(s string) {
+	io.WriteString(ctx.rw, s)
 }
 
 // WriteFile serve file
-func (c *Context) WriteFile(filepath string) {
-	http.ServeFile(c.rw, c.Req, filepath)
+func (ctx *Context) WriteFile(filepath string) {
+	http.ServeFile(ctx.rw, ctx.Req, filepath)
 }
 
 // WriteData writes some data into the body stream and updates the HTTP code.
-func (c *Context) WriteData(contentType string, data []byte) {
-	c.WriteHeader(HeaderContentType, contentType)
-	c.rw.Write(data)
+func (ctx *Context) WriteData(contentType string, data []byte) {
+	ctx.WriteHeader(HeaderContentType, contentType)
+	ctx.rw.Write(data)
 }
 
 // SetValue set value on context
-func (c *Context) SetValue(key, val interface{}) {
-	c.Context = context.WithValue(c.Context, key, val)
+func (ctx *Context) SetValue(key, val interface{}) {
+	ctx.Context = context.WithValue(ctx.Context, key, val)
 }
 
 // GetValue of key
-func (c *Context) GetValue(key interface{}) interface{} {
-	return c.Value(key)
+func (ctx *Context) GetValue(key interface{}) interface{} {
+	return ctx.Value(key)
 }
 
 // SetField set key val on context fields
-func (c *Context) SetField(key string, val interface{}) {
-	f, _ := c.Value(fieldKey{}).(fields)
+func (ctx *Context) SetField(key string, val interface{}) {
+	f, _ := ctx.Value(fieldKey{}).(fields)
 	n := fields{key: val}
 	n.Merge(f)
-	c.SetValue(fieldKey{}, n)
+	ctx.SetValue(fieldKey{}, n)
 }
 
 // LogError print error level log with fields
-func (c *Context) LogError(args ...interface{}) {
-	log.WithFields(log.Fields(c.stackField(2))).Error(args...)
+func (ctx *Context) LogError(args ...interface{}) {
+	log.WithFields(log.Fields(ctx.stackField(2))).Error(args...)
 }
 
 // LogErrorf print error level format log with fields
-func (c *Context) LogErrorf(format string, args ...interface{}) {
-	log.WithFields(log.Fields(c.stackField(2))).Errorf(format, args...)
+func (ctx *Context) LogErrorf(format string, args ...interface{}) {
+	log.WithFields(log.Fields(ctx.stackField(2))).Errorf(format, args...)
 }
 
 // LogInfo print info level log with fields
-func (c *Context) LogInfo(args ...interface{}) {
-	log.WithFields(log.Fields(c.stackField(2))).Info(args...)
+func (ctx *Context) LogInfo(args ...interface{}) {
+	log.WithFields(log.Fields(ctx.stackField(2))).Info(args...)
 }
 
 // LogInfof print info level format log with fields
-func (c *Context) LogInfof(format string, args ...interface{}) {
-	log.WithFields(log.Fields(c.stackField(2))).Infof(format, args...)
+func (ctx *Context) LogInfof(format string, args ...interface{}) {
+	log.WithFields(log.Fields(ctx.stackField(2))).Infof(format, args...)
 }
 
-func (c *Context) stackField(depth int) fields {
+func (ctx *Context) stackField(depth int) fields {
 	_, caller, line, _ := runtime.Caller(depth)
 	stack := fields{
 		"caller": fmt.Sprintf("%s:%d", caller, line),
 	}
-	stack.Merge(c.fields())
+	stack.Merge(ctx.fields())
 	return stack
 }
 
-func (c *Context) fields() fields {
-	return c.Value(fieldKey{}).(fields)
+func (ctx *Context) fields() fields {
+	return ctx.Value(fieldKey{}).(fields)
 }

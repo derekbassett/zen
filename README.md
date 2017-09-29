@@ -73,9 +73,9 @@ func main() {
 
 ```go
     server := zen.New()
-    server.AddInterceptor(func(c *zen.Context) {
-        c.SetField("REQID",1)
-        c.LogInfo("Interceptor")
+    server.AddInterceptor(func(ctx *zen.Context) {
+        ctx.SetField("REQID",1)
+        ctx.LogInfo("Interceptor")
     })
 ```
 
@@ -83,7 +83,7 @@ func main() {
 
 ```go
     server := zen.New()
-    server.AddInterceptor(func(c *zen.Context) {
+    server.AddInterceptor(func(ctx *zen.Context) {
         log.Println("root middleware")
     })
 ```
@@ -95,7 +95,7 @@ func main() {
 
     user := server.Group("/user")
     {
-        user.AddInterceptor(func(c *zen.Context) {
+        user.AddInterceptor(func(ctx *zen.Context) {
         log.Println("user middleware")
         })
     }
@@ -105,8 +105,8 @@ func main() {
 
 ```go
     server := zen.New()
-    server.Get("/user/:uid",func (c *zen.Context) {
-        c.JSON(map[string]string{"uid": c.Param("uid")})
+    server.Get("/user/:uid",func (ctx *zen.Context) {
+        ctx.JSON(map[string]string{"uid": ctx.Param("uid")})
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)
@@ -116,19 +116,19 @@ func main() {
 ### Parse and validate input
 
 ```go
-func handler(c *zen.Context) {
+func handler(ctx *zen.Context) {
     var input struct {
         Name string `form:"name" json:"name"`
         Age  int    `form:"age" json:"age"`
         Mail string `form:"mail" valid:"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}" msg:"Illegal email" json:"mail"`
     }
 
-    if err := c.ParseValidForm(&input); err != nil {
-        c.JSON(map[string]string{"err": err.Error()})
+    if err := ctx.ParseValidForm(&input); err != nil {
+        ctx.JSON(map[string]string{"err": err.Error()})
         return
     }
     log.Println(input)
-    c.JSON(input)
+    ctx.JSON(input)
 }
 ```
 
@@ -136,8 +136,8 @@ func handler(c *zen.Context) {
 
 ```go
     server := zen.New()
-    server.HandlePanic(func(c *zen.Context, err interface{}) {
-        c.WriteString(fmt.Sprint(err))
+    server.HandlePanic(func(ctx *zen.Context, err interface{}) {
+        ctx.WriteString(fmt.Sprint(err))
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)
@@ -148,9 +148,9 @@ func handler(c *zen.Context) {
 
 ```go
     server := zen.New()
-    server.HandleNotFound(func(c *zen.Context) {
-        c.WriteStatus(StatusNotFound)
-        c.WriteString(StatusText(StatusNotFound))
+    server.HandleNotFound(func(ctx *zen.Context) {
+        ctx.WriteStatus(StatusNotFound)
+        ctx.WriteString(StatusText(StatusNotFound))
     })
     if err := server.Run(":8080"); err != nil {
     log.Println(err)
@@ -161,8 +161,8 @@ func handler(c *zen.Context) {
 
 ```go
     server := zen.New()
-    server.HandleNotFound(func(c *zen.Context) {
-        ctx, cancel := c.WithDeadline(time.Now().Add(time.Second) * 3)
+    server.HandleNotFound(func(ctx *zen.Context) {
+        ctx, cancel := ctx.WithDeadline(time.Now().Add(time.Second) * 3)
         defer cancel()
         db, _ := sql.Open("mysql", "dsn")
         db.QueryContext(ctx, "SELECT * FROM table;")

@@ -15,7 +15,7 @@ type (
 
 // WrapF wrap a http handlerfunc into HandlerFunc
 func WrapF(h http.HandlerFunc) HandlerFunc {
-	return func(c *Context) {
-		h(c.rw, c.Req)
+	return func(ctx *Context) {
+		h(ctx.rw, ctx.Req)
 	}
 }

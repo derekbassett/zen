@@ -176,28 +176,28 @@ func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	s.putBackContext(c)
 }
 
-func (s *Server) handleHTTPRequest(c *Context) {
+func (s *Server) handleHTTPRequest(ctx *Context) {
 	// handle panic
-	defer s.handlePanic(c)
+	defer s.handlePanic(ctx)
 
-	httpMethod := c.Req.Method
-	path := c.Req.URL.Path
+	httpMethod := ctx.Req.Method
+	path := ctx.Req.URL.Path
 
 	for i := 0; i < len(s.trees); i++ {
 		t := s.trees[i]
 		if t.method == httpMethod {
 			if handlers, params, tsr := t.node.getValue(path); handlers != nil {
-				c.params = params
+				ctx.params = params
 				for _, h := range handlers {
-					h(c)
-					if c.rw.written {
+					h(ctx)
+					if ctx.rw.written {
 						return
 					}
 				}
 				return
-			} else if c.Req.Method != "CONNECT" && path != "/" {
+			} else if ctx.Req.Method != "CONNECT" && path != "/" {
 				code := 301 // Permanent redirect, request with GET method
-				if c.Req.Method != "GET" {
+				if ctx.Req.Method != "GET" {
 					// Temporary redirect, request with same method
 					// As of Go 1.3, Go does not support status code 308.
 					code = 307
@@ -205,11 +205,11 @@ func (s *Server) handleHTTPRequest(c *Context) {
 
 				if tsr && s.RedirectTrailingSlash {
 					if len(path) > 1 && path[len(path)-1] == '/' {
-						c.Req.URL.Path = path[:len(path)-1]
+						ctx.Req.URL.Path = path[:len(path)-1]
 					} else {
-						c.Req.URL.Path = path + "/"
+						ctx.Req.URL.Path = path + "/"
 					}
-					http.Redirect(c.rw, c.Req, c.Req.URL.String(), code)
+					http.Redirect(ctx.rw, ctx.Req, ctx.Req.URL.String(), code)
 					return
 				}
 
@@ -220,8 +220,8 @@ func (s *Server) handleHTTPRequest(c *Context) {
 						s.RedirectTrailingSlash,
 					)
 					if found {
-						c.Req.URL.Path = string(fixedPath)
-						http.Redirect(c.rw, c.Req, c.Req.URL.String(), code)
+						ctx.Req.URL.Path = string(fixedPath)
+						http.Redirect(ctx.rw, ctx.Req, ctx.Req.URL.String(), code)
 						return
 					}
 				}
@@ -230,23 +230,23 @@ func (s *Server) handleHTTPRequest(c *Context) {
 		}
 	}
 
-	if c.Req.Method == "OPTIONS" {
+	if ctx.Req.Method == "OPTIONS" {
 		// Handle OPTIONS requests
 		if s.HandleOPTIONS {
-			if allow := s.allowed(path, c.Req.Method); len(allow) > 0 {
-				c.WriteHeader("Allow", allow)
+			if allow := s.allowed(path, ctx.Req.Method); len(allow) > 0 {
+				ctx.WriteHeader("Allow", allow)
 				return
 			}
 		}
 	} else {
 		// Handle 405
 		if s.HandleMethodNotAllowed {
-			if allow := s.allowed(path, c.Req.Method); len(allow) > 0 {
-				c.WriteHeader("Allow", allow)
+			if allow := s.allowed(path, ctx.Req.Method); len(allow) > 0 {
+				ctx.WriteHeader("Allow", allow)
 				if s.methodNotAllowed != nil {
-					s.methodNotAllowed(c)
+					s.methodNotAllowed(ctx)
 				} else {
-					http.Error(c.rw,
+					http.Error(ctx.rw,
 						StatusText(StatusMethodNotAllowed),
 						StatusMethodNotAllowed,
 					)
@@ -256,7 +256,7 @@ func (s *Server) handleHTTPRequest(c *Context) {
 		}
 	}
 
-	s.handleNotFound(c)
+	s.handleNotFound(ctx)
 }
 
 // Run server on addr
