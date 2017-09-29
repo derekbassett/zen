@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strconv"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -75,7 +79,8 @@ func (s *Server) getContext(rw http.ResponseWriter, req *http.Request) *Context 
 	c := contextPool.Get().(*Context)
 	c.Req = req
 	c.rw.writer = rw
-	c.Context = context.TODO()
+	c.Context = context.Background()
+	c.SetValue(fieldKey{}, fields{})
 	return c
 }
 
@@ -108,13 +113,13 @@ func (c *Context) Dup(ctx context.Context) *Context {
 
 // WithDeadline ...
 func (c *Context) WithDeadline(dead time.Time) (*Context, context.CancelFunc) {
-	ctx, cancel := context.WithDeadline(c.Context, dead)
+	ctx, cancel := context.WithDeadline(c, dead)
 	return c.Dup(ctx), cancel
 }
 
 // WithCancel ...
 func (c *Context) WithCancel() (*Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(c.Context)
+	ctx, cancel := context.WithCancel(c)
 	return c.Dup(ctx), cancel
 }
 
@@ -302,4 +307,55 @@ func (c *Context) WriteFile(filepath string) {
 func (c *Context) WriteData(contentType string, data []byte) {
 	c.WriteHeader(HeaderContentType, contentType)
 	c.rw.Write(data)
+}
+
+// SetValue set value on context
+func (c *Context) SetValue(key, val interface{}) {
+	c.Context = context.WithValue(c.Context, key, val)
+}
+
+// GetValue of key
+func (c *Context) GetValue(key interface{}) interface{} {
+	return c.Value(key)
+}
+
+// SetField set key val on context fields
+func (c *Context) SetField(key string, val interface{}) {
+	f, _ := c.Value(fieldKey{}).(fields)
+	n := fields{key: val}
+	n.Merge(f)
+	c.SetValue(fieldKey{}, n)
+}
+
+// LogError print error level log with fields
+func (c *Context) LogError(args ...interface{}) {
+	log.WithFields(log.Fields(c.stackField(2))).Error(args...)
+}
+
+// LogErrorf print error level format log with fields
+func (c *Context) LogErrorf(format string, args ...interface{}) {
+	log.WithFields(log.Fields(c.stackField(2))).Errorf(format, args...)
+}
+
+// LogInfo print info level log with fields
+func (c *Context) LogInfo(args ...interface{}) {
+	log.WithFields(log.Fields(c.stackField(2))).Info(args...)
+}
+
+// LogInfof print info level format log with fields
+func (c *Context) LogInfof(format string, args ...interface{}) {
+	log.WithFields(log.Fields(c.stackField(2))).Infof(format, args...)
+}
+
+func (c *Context) stackField(depth int) fields {
+	_, caller, line, _ := runtime.Caller(depth)
+	stack := fields{
+		"caller": fmt.Sprintf("%s:%d", caller, line),
+	}
+	stack.Merge(c.fields())
+	return stack
+}
+
+func (c *Context) fields() fields {
+	return c.Value(fieldKey{}).(fields)
 }

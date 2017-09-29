@@ -1,6 +1,7 @@
 package zen
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io/ioutil"
@@ -944,5 +945,112 @@ func TestContext_Do(t *testing.T) {
 				t.Errorf("Context.Do() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestContext_SetValue(t *testing.T) {
+	type fields struct {
+		Context context.Context
+	}
+	type args struct {
+		key interface{}
+		val interface{}
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name: "case1",
+			fields: fields{
+				Context: context.Background(),
+			},
+			args: args{
+				key: "key",
+				val: "val",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Context{
+				Context: tt.fields.Context,
+			}
+			c.SetValue(tt.args.key, tt.args.val)
+			got := c.GetValue(tt.args.key)
+			if !reflect.DeepEqual(got, tt.args.val) {
+				t.Errorf("Context.SetValue %v , want %v got %v", tt.args.key, tt.args.val, got)
+			}
+		})
+	}
+}
+
+func TestContext_SetField(t *testing.T) {
+	type fields struct {
+		Context context.Context
+	}
+	type args struct {
+		key string
+		val interface{}
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name: "case1",
+			fields: fields{
+				Context: context.Background(),
+			},
+			args: args{
+				key: "name",
+				val: "zen",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Context{
+				Context: tt.fields.Context,
+			}
+
+			c.SetField(tt.args.key, tt.args.val)
+			if !reflect.DeepEqual(tt.args.val, c.fields()[tt.args.key]) {
+				t.Error("SetField failed")
+			}
+		})
+	}
+}
+
+func TestContext_LogErrorf(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	SetLogOutput(buf)
+	ctx := Context{
+		Context: context.Background(),
+	}
+	ctx.SetField("test", "test")
+	ctx.LogError("LogError")
+	if strings.Index(buf.String(), "LogError") == -1 {
+		t.Error("LogError failed")
+	}
+
+	buf.Reset()
+	ctx.LogErrorf("%s", "LogErrorf")
+	if strings.Index(buf.String(), "LogErrorf") == -1 {
+		t.Error("LogErrorf failed")
+	}
+
+	buf.Reset()
+	ctx.LogInfo("LogInfo")
+	if strings.Index(buf.String(), "LogInfo") == -1 {
+		t.Error("LogInfo failed")
+	}
+
+	buf.Reset()
+	ctx.LogInfof("%s", "LogInfof")
+	if strings.Index(buf.String(), "LogInfof") == -1 {
+		t.Error("LogInfof failed")
 	}
 }

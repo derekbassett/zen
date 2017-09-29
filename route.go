@@ -88,6 +88,7 @@ func (s *Server) handlePanic(c *Context) {
 		if s.panicHandler != nil {
 			s.panicHandler(c, err)
 		} else {
+			c.LogError(err)
 			http.Error(c.rw, StatusText(StatusInternalServerError), StatusInternalServerError)
 		}
 	}
