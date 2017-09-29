@@ -14,6 +14,7 @@ zen is a web framework written by go, you will love it if you preffer high perfo
 * Restful API
 * Parameters in path
 * Group APIs
+* Structure log support
 * Form validate and struct bind
 * JSON and XML data bind
 * Built in panic handler
@@ -66,6 +67,16 @@ func main() {
         user.Patch("/test", handler)
         user.Delete("/test",handler)
     }
+```
+
+### Log
+
+```go
+    server := zen.New()
+    server.AddInterceptor(func(c *zen.Context) {
+        c.SetField("REQID",1)
+        c.LogInfo("Interceptor")
+    })
 ```
 
 ### Add a middleware
