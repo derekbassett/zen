@@ -4,12 +4,12 @@ import "path"
 
 type group struct {
 	base         string
-	interceptors Handlers
+	interceptors Middlewares
 	server       *Server
 }
 
 // Group create a group router with base url and shared interceptors
-func (s *Server) Group(base string, interceptors ...HandlerFunc) Router {
+func (s *Server) Group(base string, interceptors ...Middleware) Router {
 	return &group{
 		base:         base,
 		interceptors: interceptors,
@@ -20,9 +20,9 @@ func (s *Server) Group(base string, interceptors ...HandlerFunc) Router {
 // route set handler for given pattern and method
 func (g *group) Route(method string, path string, handler HandlerFunc) {
 	path = joinPath(g.base, path)
-	handlers := g.combineHandlers(handler)
+	handler = g.combineHandlers(handler)
 
-	g.server.route(method, path, handlers)
+	g.server.route(method, path, handler)
 }
 
 // Get adds a new route for GET requests.
@@ -84,7 +84,7 @@ func (g *group) Any(path string, handler HandlerFunc) {
 }
 
 // AddInterceptor add a interceptor in group
-func (g *group) AddInterceptor(interceptor HandlerFunc) {
+func (g *group) AddInterceptor(interceptor Middleware) {
 	g.interceptors = append(g.interceptors, interceptor)
 }
 
@@ -96,6 +96,6 @@ func joinPath(base, sub string) string {
 	return ret
 }
 
-func (g *group) combineHandlers(interceptor HandlerFunc) Handlers {
-	return append(g.interceptors, interceptor)
+func (g *group) combineHandlers(handler HandlerFunc) HandlerFunc {
+	return g.interceptors.Wrap(handler)
 }

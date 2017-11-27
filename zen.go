@@ -28,9 +28,6 @@ type (
 		node   *node
 	}
 
-	// StatsHandler used to handle req statistic
-	StatsHandler func(path string, begin time.Time, end time.Time)
-
 	// Server struct
 	Server struct {
 
@@ -40,7 +37,7 @@ type (
 		// Router
 		Router
 		// global middleware
-		interceptors Handlers
+		interceptors Middlewares
 		// tier tree store all handlers
 		trees []*methodTree
 
@@ -82,12 +79,8 @@ type (
 
 		// notFoundHandler handle 404
 		notFoundHandler HandlerFunc
-		// panicHandler handle internal panic
-		panicHandler PanicHandler
 		// methodNotAllowed handle method not allowed
 		methodNotAllowed HandlerFunc
-		// StatsHandler handle every single request
-		StatsHandler StatsHandler
 	}
 )
 
@@ -110,7 +103,7 @@ func New() *Server {
 // If the path was found, it returns the handle function and the path parameter
 // values. Otherwise the third return value indicates whether a redirection to
 // the same path with an extra / without the trailing slash should be performed.
-func (s *Server) Lookup(method, path string) (Handlers, Params, bool) {
+func (s *Server) Lookup(method, path string) (HandlerFunc, Params, bool) {
 	for i := range s.trees {
 		if s.trees[i].method == method {
 			return s.trees[i].node.getValue(path)
@@ -161,24 +154,14 @@ func (s *Server) allowed(path, reqMethod string) (allow string) {
 // Required by http.Handler interface. This method is invoked by the
 // http server and will handle all page routing
 func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	begin := time.Now()
-	defer func() {
-		end := time.Now()
-		if s.StatsHandler != nil {
-			s.StatsHandler(r.RequestURI, begin, end)
-		}
-	}()
 	// get context instance from pool
-	c := s.getContext(rw, r)
-	s.handleHTTPRequest(c)
+	c := getContext(rw, r)
+	defer putBackContext(c)
 
-	// put context back into pool
-	s.putBackContext(c)
+	s.handleHTTPRequest(c)
 }
 
 func (s *Server) handleHTTPRequest(ctx *Context) {
-	// handle panic
-	defer s.handlePanic(ctx)
 
 	httpMethod := ctx.Req.Method
 	path := ctx.Req.URL.Path
@@ -186,14 +169,9 @@ func (s *Server) handleHTTPRequest(ctx *Context) {
 	for i := 0; i < len(s.trees); i++ {
 		t := s.trees[i]
 		if t.method == httpMethod {
-			if handlers, params, tsr := t.node.getValue(path); handlers != nil {
+			if handler, params, tsr := t.node.getValue(path); handler != nil {
 				ctx.params = params
-				for _, h := range handlers {
-					h(ctx)
-					if ctx.rw.written {
-						return
-					}
-				}
+				handler(ctx)
 				return
 			} else if ctx.Req.Method != "CONNECT" && path != "/" {
 				code := 301 // Permanent redirect, request with GET method
@@ -281,7 +259,7 @@ func (s *Server) RunTLS(addr string, certFile string, keyFile string) error {
 
 // Shutdown gracefully with deadline
 func (s *Server) Shutdown() error {
-	ctx := s.getContext(nil, nil)
+	ctx := getContext(nil, nil)
 	if s.ShutdownDuration > 0 {
 		ctx, _ = ctx.WithDeadline(time.Now().Add(s.ShutdownDuration))
 	}

@@ -34,28 +34,25 @@ func TestServer_getContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := New()
-			if got := server.getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
+			if got := getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
 				t.Errorf("Server.getContext() = %v, want nil? %v", got, tt.wantNil)
 			} else {
-				server.putBackContext(got)
+				putBackContext(got)
 			}
 		})
 	}
 }
 
 func BenchmarkGetContext(b *testing.B) {
-	server := New()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		c := server.getContext(nil, nil)
-		server.putBackContext(c)
+		c := getContext(nil, nil)
+		putBackContext(c)
 	}
 }
 
 func TestContextCancel(t *testing.T) {
-	server := New()
-	ctx := server.getContext(nil, nil)
+	ctx := getContext(nil, nil)
 	ctx, cancel := ctx.WithCancel()
 	cancel()
 	if err := ctx.Err(); err == nil {
@@ -64,8 +61,7 @@ func TestContextCancel(t *testing.T) {
 }
 
 func TestWithDeadline(t *testing.T) {
-	server := New()
-	ctx := server.getContext(nil, nil)
+	ctx := getContext(nil, nil)
 	ctx, _ = ctx.WithDeadline(time.Now())
 	if err := ctx.Err(); err == nil {
 		t.Error("ctx.Err() want err got nil")

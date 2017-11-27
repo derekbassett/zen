@@ -42,20 +42,18 @@ func (s *Server) methodRouteTree(method string) *node {
 }
 
 // Route set handler for given pattern and method
-func (s *Server) route(method string, path string, interceptors Handlers) {
+func (s *Server) route(method string, path string, handler HandlerFunc) {
 	assert(path[0] == '/', "path must begin with '/'")
 	assert(len(method) > 0, "HTTP method can not be empty")
-	assert(interceptors != nil && len(interceptors) > 0, "handler cannot be nil")
-	h := make(Handlers, len(s.interceptors)+len(interceptors))
-	c := 0
-	c += copy(h[c:], s.interceptors)
-	c += copy(h[c:], interceptors)
+	assert(handler != nil, "handler cannot be nil")
+
+	handler = s.interceptors.Wrap(handler)
 	root := s.methodRouteTree(method)
-	root.addRoute(path, h)
+	root.addRoute(path, handler)
 }
 
 // AddInterceptor add a global interceptor
-func (s *Server) AddInterceptor(handler HandlerFunc) {
+func (s *Server) AddInterceptor(handler Middleware) {
 	s.Router.AddInterceptor(handler)
 }
 
@@ -75,23 +73,6 @@ func (s *Server) HandleNotFound(handler HandlerFunc) {
 // HandleNotAllowed set server's methodNotAllowed
 func (s *Server) HandleNotAllowed(handler HandlerFunc) {
 	s.methodNotAllowed = handler
-}
-
-// HandlePanic set server's panicHandler
-func (s *Server) HandlePanic(handler PanicHandler) {
-	s.panicHandler = handler
-}
-
-// handlePanic call server's panic handler
-func (s *Server) handlePanic(ctx *Context) {
-	if err := recover(); err != nil {
-		if s.panicHandler != nil {
-			s.panicHandler(ctx, err)
-		} else {
-			ctx.LogError(err)
-			http.Error(ctx.rw, StatusText(StatusInternalServerError), StatusInternalServerError)
-		}
-	}
 }
 
 // handleNotFound call server's not found handler

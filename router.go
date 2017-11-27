@@ -36,5 +36,5 @@ type Router interface {
 	Any(path string, handler HandlerFunc)
 
 	// AddInterceptor add a interceptor for given path
-	AddInterceptor(handler HandlerFunc)
+	AddInterceptor(handler Middleware)
 }

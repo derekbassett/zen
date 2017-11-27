@@ -75,8 +75,11 @@ func TestRouterAPI(t *testing.T) {
 	var interceptor, get, head, options, post, put, patch, delete, connect, trace, handlerFunc bool
 
 	router := New()
-	router.AddInterceptor(func(ctx *Context) {
-		interceptor = true
+	router.AddInterceptor(func(h HandlerFunc) HandlerFunc {
+		return func(c *Context) {
+			interceptor = true
+			h(c)
+		}
 	})
 	router.Get("/GET", func(ctx *Context) {
 		get = true
@@ -176,9 +179,13 @@ func TestRouterAPIAny(t *testing.T) {
 	var interceptor, get, head, options, post, put, patch, delete, connect, trace bool
 
 	router := New()
-	router.AddInterceptor(func(ctx *Context) {
-		interceptor = true
+	router.AddInterceptor(func(h HandlerFunc) HandlerFunc {
+		return func(c *Context) {
+			interceptor = true
+			h(c)
+		}
 	})
+
 	router.Any("/ANY", func(ctx *Context) {
 		switch ctx.Req.Method {
 		case GET:
@@ -477,45 +484,6 @@ func TestRouterNotFound(t *testing.T) {
 	}
 }
 
-func TestRouterPanicHandler(t *testing.T) {
-	router := New()
-	panicHandled := false
-
-	router.HandlePanic(func(ctx *Context, _ interface{}) {
-		panicHandled = true
-	})
-
-	router.Route("PUT", "/user/:name", func(ctx *Context) {
-		panic("oops!")
-	})
-
-	w := new(mockResponseWriter)
-	req, _ := http.NewRequest("PUT", "/user/gopher", nil)
-
-	router.ServeHTTP(w, req)
-
-	if !panicHandled {
-		t.Fatal("simulating failed")
-	}
-}
-
-func TestRouterDefaultPanicHandler(t *testing.T) {
-	router := New()
-
-	router.Route("PUT", "/user/:name", func(ctx *Context) {
-		panic("oops!")
-	})
-
-	w := new(mockResponseWriter)
-	req, _ := http.NewRequest("PUT", "/user/gopher", nil)
-
-	router.ServeHTTP(w, req)
-
-	if w.code != http.StatusInternalServerError {
-		t.Fatal("simulating failed")
-	}
-}
-
 func TestRouterLookup(t *testing.T) {
 	routed := false
 	wantHandle := func(ctx *Context) {
@@ -537,11 +505,11 @@ func TestRouterLookup(t *testing.T) {
 	// insert route and try again
 	router.Get("/user/:name", wantHandle)
 
-	handles, params, tsr := router.Lookup("GET", "/user/gopher")
-	if handles == nil {
+	handler, params, tsr := router.Lookup("GET", "/user/gopher")
+	if handler == nil {
 		t.Fatal("Got no handle!")
 	} else {
-		handles[0](nil)
+		handler(nil)
 		if !routed {
 			t.Fatal("Routing failed!")
 		}

@@ -75,7 +75,7 @@ type (
 	}
 )
 
-func (s *Server) getContext(rw http.ResponseWriter, req *http.Request) *Context {
+func getContext(rw http.ResponseWriter, req *http.Request) *Context {
 	c := contextPool.Get().(*Context)
 	c.Req = req
 	c.rw.writer = rw
@@ -84,7 +84,7 @@ func (s *Server) getContext(rw http.ResponseWriter, req *http.Request) *Context 
 	return c
 }
 
-func (s *Server) putBackContext(ctx *Context) {
+func putBackContext(ctx *Context) {
 	ctx.params = ctx.params[0:0]
 	ctx.parsed = false
 	ctx.rw.written = false

@@ -73,9 +73,12 @@ func main() {
 
 ```go
     server := zen.New()
-    server.AddInterceptor(func(ctx *zen.Context) {
-        ctx.SetField("REQID",1)
-        ctx.LogInfo("Interceptor")
+    server.AddInterceptor(func(h HandlerFunc) HandlerFunc {
+        return func(ctx *zen.Context) {
+            ctx.SetField("REQID",1)
+            ctx.LogInfo("Interceptor")
+            h(ctx)
+        }
     })
 ```
 
@@ -83,8 +86,12 @@ func main() {
 
 ```go
     server := zen.New()
-    server.AddInterceptor(func(ctx *zen.Context) {
-        log.Println("root middleware")
+    server.AddInterceptor(func(h HandlerFunc) HandlerFunc {
+        return func(ctx *zen.Context) {
+            ctx.SetField("REQID",1)
+            ctx.LogInfo("Root Middleware")
+            h(ctx)
+        }
     })
 ```
 
@@ -95,9 +102,12 @@ func main() {
 
     user := server.Group("/user")
     {
-        user.AddInterceptor(func(ctx *zen.Context) {
-        log.Println("user middleware")
-        })
+        user.AddInterceptor(func(h HandlerFunc) HandlerFunc {
+        return func(ctx *zen.Context) {
+            ctx.LogInfo("Group Middleware")
+            h(ctx)
+        }
+    })
     }
 ```
 
@@ -130,18 +140,6 @@ func handler(ctx *zen.Context) {
     log.Println(input)
     ctx.JSON(input)
 }
-```
-
-### Handle panic
-
-```go
-    server := zen.New()
-    server.HandlePanic(func(ctx *zen.Context, err interface{}) {
-        ctx.WriteString(fmt.Sprint(err))
-    })
-    if err := server.Run(":8080"); err != nil {
-    log.Println(err)
-    }
 ```
 
 ### Handle 404
