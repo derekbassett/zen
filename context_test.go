@@ -1023,6 +1023,7 @@ func TestContext_SetField(t *testing.T) {
 func TestContext_LogErrorf(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	SetLogOutput(buf)
+	SetLogLevel("debug")
 	ctx := Context{
 		Context: context.Background(),
 	}
