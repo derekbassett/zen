@@ -30,3 +30,29 @@ func Test_WrapF(t *testing.T) {
 		})
 	}
 }
+
+func TestUnWrapF(t *testing.T) {
+	type args struct {
+		h HandlerFunc
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantNil bool
+	}{
+		{
+			"case1",
+			args{
+				func(*Context) {},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := UnWrapF(tt.args.h); (got == nil) != tt.wantNil {
+				t.Errorf("UnWrapF() = %v, wantNil %v", got, tt.wantNil)
+			}
+		})
+	}
+}
