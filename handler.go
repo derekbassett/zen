@@ -7,8 +7,6 @@ import (
 type (
 	// HandlerFunc is a type alias for handler
 	HandlerFunc func(*Context)
-	// PanicHandler handle panic
-	PanicHandler func(*Context, interface{})
 	// Middleware accept a HandlerFunc and return another HandlerFunc
 	Middleware func(HandlerFunc) HandlerFunc
 	// Middlewares contains list of Middleware
