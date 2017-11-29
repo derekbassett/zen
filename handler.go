@@ -13,6 +13,11 @@ type (
 	Middlewares []Middleware
 )
 
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	UnWrapF(f).ServeHTTP(w, r)
+}
+
 // WrapF wrap a http handlerfunc into HandlerFunc
 func WrapF(h http.HandlerFunc) HandlerFunc {
 	return func(ctx *Context) {
@@ -29,8 +34,8 @@ func UnWrapF(h HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// WrapStdMiddleware ...
-func WrapStdMiddleware(middleware func(h http.HandlerFunc) http.HandlerFunc) Middleware {
+// WrapStdMiddleware add support for std http middleware
+func WrapStdMiddleware(middleware func(http.HandlerFunc) http.HandlerFunc) Middleware {
 	return func(h HandlerFunc) HandlerFunc {
 		return WrapF(middleware(UnWrapF(h)))
 	}
