@@ -61,7 +61,7 @@ func (s *Server) AddInterceptor(handler Middleware) {
 // static files from the specified directory
 func (s *Server) Static(staticpath string, dir string) {
 	s.Route(GET, path.Join(staticpath, "/*filepath"), func(ctx *Context) {
-		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(ctx.rw, ctx.Req)
+		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(ctx.Rw, ctx.Req)
 	})
 }
 
@@ -82,5 +82,5 @@ func (s *Server) handleNotFound(ctx *Context) {
 		return
 	}
 
-	http.NotFound(ctx.rw, ctx.Req)
+	http.NotFound(ctx.Rw, ctx.Req)
 }

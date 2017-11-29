@@ -17,7 +17,7 @@ var _ http.Handler = (*Server)(nil)
 // global contextPool to reuse context
 var contextPool = &sync.Pool{
 	New: func() interface{} {
-		c := Context{rw: &responseWriter{}}
+		c := Context{}
 		return &c
 	},
 }
@@ -187,7 +187,7 @@ func (s *Server) handleHTTPRequest(ctx *Context) {
 					} else {
 						ctx.Req.URL.Path = path + "/"
 					}
-					http.Redirect(ctx.rw, ctx.Req, ctx.Req.URL.String(), code)
+					http.Redirect(ctx.Rw, ctx.Req, ctx.Req.URL.String(), code)
 					return
 				}
 
@@ -199,7 +199,7 @@ func (s *Server) handleHTTPRequest(ctx *Context) {
 					)
 					if found {
 						ctx.Req.URL.Path = string(fixedPath)
-						http.Redirect(ctx.rw, ctx.Req, ctx.Req.URL.String(), code)
+						http.Redirect(ctx.Rw, ctx.Req, ctx.Req.URL.String(), code)
 						return
 					}
 				}
@@ -224,7 +224,7 @@ func (s *Server) handleHTTPRequest(ctx *Context) {
 				if s.methodNotAllowed != nil {
 					s.methodNotAllowed(ctx)
 				} else {
-					http.Error(ctx.rw,
+					http.Error(ctx.Rw,
 						StatusText(StatusMethodNotAllowed),
 						StatusMethodNotAllowed,
 					)

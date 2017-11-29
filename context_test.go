@@ -71,7 +71,7 @@ func TestWithDeadline(t *testing.T) {
 func TestContext_parseInput(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
+		rw     http.ResponseWriter
 		params Params
 		parsed bool
 	}
@@ -83,7 +83,7 @@ func TestContext_parseInput(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET", strings.NewReader("name=zen&version=1.0")),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				nil,
 				false,
 			},
@@ -94,7 +94,7 @@ func TestContext_parseInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				Rw:     tt.fields.rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -108,7 +108,7 @@ func TestContext_parseInput(t *testing.T) {
 func TestContext_Form(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
+		rw     http.ResponseWriter
 		params Params
 		parsed bool
 	}
@@ -124,7 +124,7 @@ func TestContext_Form(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				nil,
 				false,
 			},
@@ -134,7 +134,7 @@ func TestContext_Form(t *testing.T) {
 		{"case2",
 			fields{
 				httptest.NewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				nil,
 				false,
 			},
@@ -146,7 +146,7 @@ func TestContext_Form(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				Rw:     tt.fields.rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -160,7 +160,7 @@ func TestContext_Form(t *testing.T) {
 func TestContext_Param(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
+		rw     http.ResponseWriter
 		params Params
 		parsed bool
 	}
@@ -176,7 +176,7 @@ func TestContext_Param(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
 			},
@@ -186,7 +186,7 @@ func TestContext_Param(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
 			},
@@ -198,7 +198,7 @@ func TestContext_Param(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				Rw:     tt.fields.rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -212,7 +212,7 @@ func TestContext_Param(t *testing.T) {
 func TestContext_ParseValidateForm(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
+		rw     http.ResponseWriter
 		params Params
 		parsed bool
 	}
@@ -229,7 +229,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET?email=golang@gmail.com", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				false,
 			},
@@ -244,7 +244,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		{"case2",
 			fields{
 				httptest.NewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -259,7 +259,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		{"case3",
 			fields{
 				httptest.NewRequest("GET", "/GET?name=zen", nil),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -275,7 +275,7 @@ func TestContext_ParseValidateForm(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				Rw:     tt.fields.rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -296,9 +296,10 @@ func BenchmarkContext_ParseValidateForm(b *testing.B) {
 	req := httptest.NewRequest("GET", "/GET?name=zen&age=22&email=zgrubby@gmail.com", nil)
 	c := &Context{
 		Req:    req,
-		rw:     &responseWriter{writer: httptest.NewRecorder(), written: false},
+		Rw:     httptest.NewRecorder(),
 		parsed: false,
 	}
+
 	var input = &Input{}
 
 	b.ResetTimer()
@@ -310,7 +311,7 @@ func BenchmarkContext_ParseValidateForm(b *testing.B) {
 func TestContext_BindJSON(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
+		rw     http.ResponseWriter
 		params Params
 		parsed bool
 	}
@@ -326,7 +327,7 @@ func TestContext_BindJSON(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET", strings.NewReader(`{"name":"zen"}`)),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -341,7 +342,7 @@ func TestContext_BindJSON(t *testing.T) {
 		{"case2",
 			fields{
 				httptest.NewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -357,7 +358,7 @@ func TestContext_BindJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				Rw:     tt.fields.rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -371,7 +372,7 @@ func TestContext_BindJSON(t *testing.T) {
 func TestContext_BindXML(t *testing.T) {
 	type fields struct {
 		Req    *http.Request
-		rw     *responseWriter
+		rw     http.ResponseWriter
 		params Params
 		parsed bool
 	}
@@ -387,7 +388,7 @@ func TestContext_BindXML(t *testing.T) {
 		{"case1",
 			fields{
 				httptest.NewRequest("GET", "/GET", strings.NewReader(`<x><name>hello</name></x>`)),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -402,7 +403,7 @@ func TestContext_BindXML(t *testing.T) {
 		{"case2",
 			fields{
 				httptest.NewRequest("GET", "/GET", strings.NewReader(`{"flag":"zen"}`)),
-				&responseWriter{writer: httptest.NewRecorder(), written: false},
+				httptest.NewRecorder(),
 				Params{Param{Key: "uid", Value: "10086"}},
 				true,
 			},
@@ -418,7 +419,7 @@ func TestContext_BindXML(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     tt.fields.rw,
+				Rw:     tt.fields.rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -633,7 +634,7 @@ func TestContext_JSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     &responseWriter{writer: rw, written: false},
+				Rw:     rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -687,7 +688,7 @@ func TestContext_XML(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     &responseWriter{writer: rw, written: false},
+				Rw:     rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -741,7 +742,7 @@ func TestContext_WriteStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     &responseWriter{writer: rw, written: false},
+				Rw:     rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -784,7 +785,7 @@ func TestContext_RawStr(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     &responseWriter{writer: rw, written: false},
+				Rw:     rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}
@@ -829,7 +830,7 @@ func TestContext_Data(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Context{
 				Req:    tt.fields.Req,
-				rw:     &responseWriter{writer: rw, written: false},
+				Rw:     rw,
 				params: tt.fields.params,
 				parsed: tt.fields.parsed,
 			}

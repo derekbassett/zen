@@ -68,7 +68,7 @@ type (
 	// Context warps request and response writer
 	Context struct {
 		Req    *http.Request
-		rw     *responseWriter
+		Rw     http.ResponseWriter
 		params Params
 		parsed bool
 		context.Context
@@ -78,7 +78,7 @@ type (
 func getContext(rw http.ResponseWriter, req *http.Request) *Context {
 	c := contextPool.Get().(*Context)
 	c.Req = req
-	c.rw.writer = rw
+	c.Rw = rw
 	c.Context = context.Background()
 	c.SetValue(fieldKey{}, fields{})
 	return c
@@ -87,9 +87,8 @@ func getContext(rw http.ResponseWriter, req *http.Request) *Context {
 func putBackContext(ctx *Context) {
 	ctx.params = ctx.params[0:0]
 	ctx.parsed = false
-	ctx.rw.written = false
 	ctx.Req = nil
-	ctx.rw.writer = nil
+	ctx.Rw = nil
 	ctx.Context = nil
 	contextPool.Put(ctx)
 }
@@ -104,7 +103,7 @@ func (ctx *Context) parseInput() error {
 func (ctx *Context) Dup(c context.Context) *Context {
 	ret := new(Context)
 	ret.Req = ctx.Req
-	ret.rw = ctx.rw
+	ret.Rw = ctx.Rw
 	ret.Context = c
 	ret.parsed = ctx.parsed
 	ret.params = ctx.params
@@ -271,7 +270,7 @@ func (ctx *Context) JSON(i interface{}) (err error) {
 	ctx.WriteHeader(HeaderContentType, MIMEApplicationJSONCharsetUTF8)
 
 	// Encode json data to rw
-	return json.NewEncoder(ctx.rw).Encode(i)
+	return json.NewEncoder(ctx.Rw).Encode(i)
 }
 
 // XML : write xml data to http response writer, with status code 200
@@ -280,33 +279,33 @@ func (ctx *Context) XML(i interface{}) (err error) {
 	ctx.WriteHeader(HeaderContentType, MIMEApplicationXMLCharsetUTF8)
 
 	// Encode xml data to rw
-	return xml.NewEncoder(ctx.rw).Encode(i)
+	return xml.NewEncoder(ctx.Rw).Encode(i)
 }
 
 // WriteStatus set response's status code
 func (ctx *Context) WriteStatus(code int) {
-	ctx.rw.WriteHeader(code)
+	ctx.Rw.WriteHeader(code)
 }
 
 // WriteHeader set response header
 func (ctx *Context) WriteHeader(k, v string) {
-	ctx.rw.Header().Add(k, v)
+	ctx.Rw.Header().Add(k, v)
 }
 
 // WriteString write raw string
 func (ctx *Context) WriteString(s string) {
-	io.WriteString(ctx.rw, s)
+	io.WriteString(ctx.Rw, s)
 }
 
 // WriteFile serve file
 func (ctx *Context) WriteFile(filepath string) {
-	http.ServeFile(ctx.rw, ctx.Req, filepath)
+	http.ServeFile(ctx.Rw, ctx.Req, filepath)
 }
 
 // WriteData writes some data into the body stream and updates the HTTP code.
 func (ctx *Context) WriteData(contentType string, data []byte) {
 	ctx.WriteHeader(HeaderContentType, contentType)
-	ctx.rw.Write(data)
+	ctx.Rw.Write(data)
 }
 
 // SetValue set value on context
