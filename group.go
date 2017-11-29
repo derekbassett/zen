@@ -20,7 +20,7 @@ func (s *Server) Group(base string, interceptors ...Middleware) Router {
 // route set handler for given pattern and method
 func (g *group) Route(method string, path string, handler HandlerFunc) {
 	path = joinPath(g.base, path)
-	handler = g.combineHandlers(handler)
+	handler = g.wrap(handler)
 
 	g.server.route(method, path, handler)
 }
@@ -96,6 +96,6 @@ func joinPath(base, sub string) string {
 	return ret
 }
 
-func (g *group) combineHandlers(handler HandlerFunc) HandlerFunc {
+func (g *group) wrap(handler HandlerFunc) HandlerFunc {
 	return g.interceptors.Wrap(handler)
 }
