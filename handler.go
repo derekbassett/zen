@@ -34,7 +34,7 @@ func UnWrapF(h HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// WrapStdMiddleware add support for std http middleware
+// WrapStdMiddleware add support for 3rd party http middleware
 func WrapStdMiddleware(middleware func(http.HandlerFunc) http.HandlerFunc) Middleware {
 	return func(h HandlerFunc) HandlerFunc {
 		return WrapF(middleware(UnWrapF(h)))
