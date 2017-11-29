@@ -161,7 +161,6 @@ func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleHTTPRequest(ctx *Context) {
-
 	httpMethod := ctx.Req.Method
 	path := ctx.Req.URL.Path
 
