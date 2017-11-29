@@ -17,8 +17,7 @@ var _ http.Handler = (*Server)(nil)
 // global contextPool to reuse context
 var contextPool = &sync.Pool{
 	New: func() interface{} {
-		c := Context{}
-		return &c
+		return new(Context)
 	},
 }
 
