@@ -84,7 +84,7 @@ type (
 )
 
 // New will create a Server instance and return a pointer which point to it
-func New() *Server {
+func New(options ...Option) *Server {
 	s := &Server{
 		RedirectTrailingSlash:  true,
 		RedirectFixedPath:      true,
@@ -94,6 +94,9 @@ func New() *Server {
 
 	s.Router = s.Group("")
 
+	for _, option := range options {
+		option(s)
+	}
 	return s
 }
 
