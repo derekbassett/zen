@@ -12,14 +12,16 @@ const (
 )
 
 // ensure Server implement http.Handler
-var _ http.Handler = (*Server)(nil)
+var (
+	_ http.Handler = (*Server)(nil)
 
-// global contextPool to reuse context
-var contextPool = &sync.Pool{
-	New: func() interface{} {
-		return new(Context)
-	},
-}
+	// global contextPool to reuse context
+	contextPool = &sync.Pool{
+		New: func() interface{} {
+			return new(Context)
+		},
+	}
+)
 
 type (
 	methodTree struct {

@@ -79,7 +79,7 @@ func getContext(rw http.ResponseWriter, req *http.Request) *Context {
 	c := contextPool.Get().(*Context)
 	c.Req = req
 	c.Rw = rw
-	c.Context = context.Background()
+	c.Context = context.TODO()
 	c.SetValue(fieldKey{}, fields{})
 	return c
 }
