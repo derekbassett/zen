@@ -16,6 +16,8 @@ type Ratelimiter interface {
 
 	Wait(context.Context) error
 	WaitN(context.Context, int) error
+
+	Wrap(zen.HandlerFunc) zen.HandlerFunc
 }
 
 type ratelimiter struct {
