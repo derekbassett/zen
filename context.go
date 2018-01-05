@@ -131,7 +131,7 @@ func (ctx *Context) Do(job func() error) error {
 			errChan <- err
 			return
 		}
-		done <- struct{}{}
+		close(done)
 	}()
 
 	select {
