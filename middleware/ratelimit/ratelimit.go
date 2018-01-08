@@ -12,7 +12,6 @@ var _ Ratelimiter = (*ratelimiter)(nil)
 // Ratelimiter ...
 type Ratelimiter interface {
 	Allow() bool
-	AllowN(int) bool
 
 	Wait(context.Context) error
 	WaitN(context.Context, int) error
@@ -45,6 +44,7 @@ func (r *ratelimiter) ticker() {
 	}
 }
 
+// Allow request a token from limiter
 func (r *ratelimiter) Allow() bool {
 	var ret bool
 
@@ -56,17 +56,7 @@ func (r *ratelimiter) Allow() bool {
 	return ret
 }
 
-func (r *ratelimiter) AllowN(n int) bool {
-	for i := 0; i < n; i++ {
-		select {
-		case <-r.limiter:
-		default:
-			return false
-		}
-	}
-	return true
-}
-
+// Wait for token until ctx timeout
 func (r *ratelimiter) Wait(ctx context.Context) error {
 	var ret error
 	select {
@@ -78,6 +68,7 @@ func (r *ratelimiter) Wait(ctx context.Context) error {
 	return ret
 }
 
+// WaitN for N token until ctx timeout
 func (r *ratelimiter) WaitN(ctx context.Context, n int) error {
 	for i := 0; i < n; i++ {
 		select {
