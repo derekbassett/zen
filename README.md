@@ -69,19 +69,6 @@ func main() {
     }
 ```
 
-### Log
-
-```go
-    server := zen.New()
-    server.AddInterceptor(func(h HandlerFunc) HandlerFunc {
-        return func(ctx *zen.Context) {
-            ctx.SetField("REQID",1)
-            ctx.LogInfo("Interceptor")
-            h(ctx)
-        }
-    })
-```
-
 ### Add a middleware
 
 ```go

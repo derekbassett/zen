@@ -16,7 +16,7 @@ type Ratelimiter interface {
 	Wait(context.Context) error
 	WaitN(context.Context, int) error
 
-	Wrap(zen.HandlerFunc) zen.HandlerFunc
+	MiddleWare() zen.Middleware
 }
 
 type ratelimiter struct {
@@ -78,6 +78,10 @@ func (r *ratelimiter) WaitN(ctx context.Context, n int) error {
 		}
 	}
 	return nil
+}
+
+func (r *ratelimiter) MiddleWare() zen.Middleware {
+	return r.Wrap
 }
 
 // Wrap is a middleware
