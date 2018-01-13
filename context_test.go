@@ -34,10 +34,10 @@ func TestServer_getContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getContext(tt.args.rw, tt.args.req); (got == nil) != tt.wantNil {
+			if got := getContext(tt.args.rw, tt.args.req); (got.Context == nil) != tt.wantNil {
 				t.Errorf("Server.getContext() = %v, want nil? %v", got, tt.wantNil)
 			} else {
-				putBackContext(got)
+				putBackContext(&got)
 			}
 		})
 	}
@@ -47,7 +47,7 @@ func BenchmarkGetContext(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		c := getContext(nil, nil)
-		putBackContext(c)
+		putBackContext(&c)
 	}
 }
 
@@ -853,7 +853,7 @@ func TestContext_File(t *testing.T) {
 	f.Close()
 
 	server := New()
-	server.Get("/file", func(ctx *Context) {
+	server.Get("/file", func(ctx Context) {
 		ctx.WriteFile(f.Name())
 	})
 	req := httptest.NewRequest("GET", "/file", nil)

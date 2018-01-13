@@ -160,12 +160,12 @@ func (s *Server) allowed(path, reqMethod string) (allow string) {
 func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	// get context instance from pool
 	c := getContext(rw, r)
-	defer putBackContext(c)
+	defer putBackContext(&c)
 
 	s.handleHTTPRequest(c)
 }
 
-func (s *Server) handleHTTPRequest(ctx *Context) {
+func (s *Server) handleHTTPRequest(ctx Context) {
 	httpMethod := ctx.Req.Method
 	path := ctx.Req.URL.Path
 

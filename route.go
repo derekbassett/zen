@@ -60,7 +60,7 @@ func (s *Server) AddInterceptor(handler Middleware) {
 // Static :Adds a new Route for Static http requests. Serves
 // static files from the specified directory
 func (s *Server) Static(staticpath string, dir string) {
-	s.Route(GET, path.Join(staticpath, "/*filepath"), func(ctx *Context) {
+	s.Route(GET, path.Join(staticpath, "/*filepath"), func(ctx Context) {
 		http.StripPrefix(staticpath, http.FileServer(http.Dir(dir))).ServeHTTP(ctx.Rw, ctx.Req)
 	})
 }
@@ -76,7 +76,7 @@ func (s *Server) HandleNotAllowed(handler HandlerFunc) {
 }
 
 // handleNotFound call server's not found handler
-func (s *Server) handleNotFound(ctx *Context) {
+func (s *Server) handleNotFound(ctx Context) {
 	if s.notFoundHandler != nil {
 		s.notFoundHandler(ctx)
 		return

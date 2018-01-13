@@ -43,7 +43,7 @@ func TestUnWrapF(t *testing.T) {
 		{
 			"case1",
 			args{
-				func(*Context) {},
+				func(Context) {},
 			},
 			false,
 		},

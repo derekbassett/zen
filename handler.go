@@ -6,7 +6,7 @@ import (
 
 type (
 	// HandlerFunc is a type alias for handler
-	HandlerFunc func(*Context)
+	HandlerFunc func(Context)
 	// Middleware accept a HandlerFunc and return another HandlerFunc
 	Middleware func(HandlerFunc) HandlerFunc
 	// Middlewares contains list of Middleware
@@ -20,7 +20,7 @@ func (f HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // WrapF wrap a http handlerfunc into HandlerFunc
 func WrapF(h http.HandlerFunc) HandlerFunc {
-	return func(ctx *Context) {
+	return func(ctx Context) {
 		h(ctx.Rw, ctx.Req)
 	}
 }
@@ -29,7 +29,7 @@ func WrapF(h http.HandlerFunc) HandlerFunc {
 func UnWrapF(h HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := getContext(rw, req)
-		defer putBackContext(ctx)
+		defer putBackContext(&ctx)
 		h(ctx)
 	}
 }

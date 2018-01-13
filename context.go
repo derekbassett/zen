@@ -75,13 +75,13 @@ type (
 	}
 )
 
-func getContext(rw http.ResponseWriter, req *http.Request) *Context {
+func getContext(rw http.ResponseWriter, req *http.Request) Context {
 	c := contextPool.Get().(*Context)
 	c.Req = req
 	c.Rw = rw
 	c.Context = context.TODO()
 	c.SetValue(fieldKey{}, fields{})
-	return c
+	return *c
 }
 
 func putBackContext(ctx *Context) {
@@ -100,8 +100,8 @@ func (ctx *Context) parseInput() error {
 }
 
 // Dup make a duplicate Context with context.Context
-func (ctx *Context) Dup(c context.Context) *Context {
-	ret := new(Context)
+func (ctx *Context) Dup(c context.Context) Context {
+	ret := Context{}
 	ret.Req = ctx.Req
 	ret.Rw = ctx.Rw
 	ret.Context = c
@@ -111,13 +111,13 @@ func (ctx *Context) Dup(c context.Context) *Context {
 }
 
 // WithDeadline ...
-func (ctx *Context) WithDeadline(dead time.Time) (*Context, context.CancelFunc) {
+func (ctx *Context) WithDeadline(dead time.Time) (Context, context.CancelFunc) {
 	c, cancel := context.WithDeadline(ctx, dead)
 	return ctx.Dup(c), cancel
 }
 
 // WithCancel ...
-func (ctx *Context) WithCancel() (*Context, context.CancelFunc) {
+func (ctx *Context) WithCancel() (Context, context.CancelFunc) {
 	c, cancel := context.WithCancel(ctx)
 	return ctx.Dup(c), cancel
 }
