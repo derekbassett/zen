@@ -86,7 +86,7 @@ func (r *ratelimiter) MiddleWare() zen.Middleware {
 
 // Wrap is a middleware
 func (r *ratelimiter) Wrap(handler zen.HandlerFunc) zen.HandlerFunc {
-	return func(ctx *zen.Context) {
+	return func(ctx zen.Context) {
 		if !r.Allow() {
 			ctx.WriteStatus(zen.StatusGatewayTimeout)
 			return
