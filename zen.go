@@ -14,13 +14,6 @@ const (
 // ensure Server implement http.Handler
 var (
 	_ http.Handler = (*Server)(nil)
-
-	// global contextPool to reuse context
-	contextPool = &sync.Pool{
-		New: func() interface{} {
-			return new(Context)
-		},
-	}
 )
 
 type (
@@ -160,7 +153,6 @@ func (s *Server) allowed(path, reqMethod string) (allow string) {
 func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	// get context instance from pool
 	c := getContext(rw, r)
-	defer putBackContext(&c)
 
 	s.handleHTTPRequest(c)
 }

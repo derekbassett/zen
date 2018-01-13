@@ -76,21 +76,12 @@ type (
 )
 
 func getContext(rw http.ResponseWriter, req *http.Request) Context {
-	c := contextPool.Get().(*Context)
+	c := Context{}
 	c.Req = req
 	c.Rw = rw
 	c.Context = context.TODO()
 	c.SetValue(fieldKey{}, fields{})
-	return *c
-}
-
-func putBackContext(ctx *Context) {
-	ctx.params = ctx.params[0:0]
-	ctx.parsed = false
-	ctx.Req = nil
-	ctx.Rw = nil
-	ctx.Context = nil
-	contextPool.Put(ctx)
+	return c
 }
 
 // parseInput will parse request's form and

@@ -29,7 +29,6 @@ func WrapF(h http.HandlerFunc) HandlerFunc {
 func UnWrapF(h HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := getContext(rw, req)
-		defer putBackContext(&ctx)
 		h(ctx)
 	}
 }

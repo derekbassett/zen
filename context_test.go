@@ -36,8 +36,6 @@ func TestServer_getContext(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getContext(tt.args.rw, tt.args.req); (got.Context == nil) != tt.wantNil {
 				t.Errorf("Server.getContext() = %v, want nil? %v", got, tt.wantNil)
-			} else {
-				putBackContext(&got)
 			}
 		})
 	}
@@ -47,7 +45,7 @@ func BenchmarkGetContext(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		c := getContext(nil, nil)
-		putBackContext(&c)
+		_ = c
 	}
 }
 
