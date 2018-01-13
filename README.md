@@ -74,7 +74,7 @@ func main() {
 ```go
     server := zen.New()
     server.AddInterceptor(func(h HandlerFunc) HandlerFunc {
-        return func(ctx *zen.Context) {
+        return func(ctx zen.Context) {
             ctx.SetField("REQID",1)
             ctx.LogInfo("Root Middleware")
             h(ctx)
@@ -90,7 +90,7 @@ func main() {
     user := server.Group("/user")
     {
         user.AddInterceptor(func(h HandlerFunc) HandlerFunc {
-        return func(ctx *zen.Context) {
+        return func(ctx zen.Context) {
             ctx.LogInfo("Group Middleware")
             h(ctx)
         }
@@ -102,7 +102,7 @@ func main() {
 
 ```go
     server := zen.New()
-    server.Get("/user/:uid",func (ctx *zen.Context) {
+    server.Get("/user/:uid",func (ctx zen.Context) {
         ctx.JSON(map[string]string{"uid": ctx.Param("uid")})
     })
     if err := server.Run(":8080"); err != nil {
@@ -113,7 +113,7 @@ func main() {
 ### Parse and validate input
 
 ```go
-func handler(ctx *zen.Context) {
+func handler(ctx zen.Context) {
     var input struct {
         Name string `form:"name" json:"name"`
         Age  int    `form:"age" json:"age"`
@@ -133,7 +133,7 @@ func handler(ctx *zen.Context) {
 
 ```go
     server := zen.New()
-    server.HandleNotFound(func(ctx *zen.Context) {
+    server.HandleNotFound(func(ctx zen.Context) {
         ctx.WriteStatus(StatusNotFound)
         ctx.WriteString(StatusText(StatusNotFound))
     })
@@ -146,7 +146,7 @@ func handler(ctx *zen.Context) {
 
 ```go
     server := zen.New()
-    server.HandleNotFound(func(ctx *zen.Context) {
+    server.HandleNotFound(func(ctx zen.Context) {
         ctx, cancel := ctx.WithDeadline(time.Now().Add(time.Second) * 3)
         defer cancel()
         db, _ := sql.Open("mysql", "dsn")
